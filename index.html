@@ -33,7 +33,7 @@
             100% { background-position: 0% 50%; } 
         }
 
-        。main-card {
+        .main-card {
             width: 100%; 
             max-width: 1050px;
             background: rgba(235, 230, 230, 0.75); 
@@ -1348,7 +1348,7 @@
 
         function updateMargin(value) {
             try {
-                AppState。currentMargin = parseInt(value);
+                AppState.currentMargin = parseInt(value);
                 const marginVal = document.getElementById('marginVal');
                 if (marginVal) {
                     marginVal.innerText = value;
@@ -1555,7 +1555,7 @@
                 AppState.invoiceFiles = [];
                 AppState.originalFileNames = [];
                 AppState.originalFiles = [];
-                AppState.currentMargin = 4;
+                AppState.currentMargin = 2;
                 AppState.showLines = true;
                 AppState.isProcessing = false;
                 
