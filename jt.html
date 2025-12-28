@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>手机截图批量打印</title>
+	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22>💰</text></svg>">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* 【新增：首页按钮样式，完全复制问号按钮的样式】 */
+        .home-btn {
+            position: absolute;
+            right: 84px; /* 在发票按钮左侧留出间距 */
+            top: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(74, 109, 124, 0.3);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        /* 【新增：发票按钮样式，完全复制问号按钮的样式】 */
+        .invoice-btn {
+            position: absolute;
+            right: 42px; /* 在问号按钮左侧留出间距 */
+            top: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(74, 109, 124, 0.3);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .invoice-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        /* 【结束新增】 */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg-speed: 20s; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(-45deg, #4a6d7c, #8da383, #8a6a9c, #d18a66, #147a61);
+            background-size: 400% 400%;
+            animation: gradientBG var(--bg-speed) ease infinite;
+            background-attachment: fixed;
+            min-height: 100vh; 
+            padding: 12px 20px 20px 20px; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.1s ease;
+        }
+
+        body.mode-6 { }
+        body.mode-12 { }
+
+        @keyframes gradientBG { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+        }
+
+        .main-card {
+            width: 100%; 
+            max-width: 1050px;
+            background: rgba(235, 230, 230, 0.75); 
+            backdrop-filter: blur(15px); 
+            border-radius: 12px; 
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+        }
+
+        .header { 
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .header h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            font-size: 24px; 
+            padding-bottom: 6px;
+            margin-bottom: 12px; 
+            letter-spacing: 2px; 
+            font-weight: 600; 
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .help-btn {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(74, 109, 124, 0.3);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .help-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .top-layout { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 12px; 
+            align-items: stretch; 
+        }
+        
+        .drop-zone-container { 
+            flex: 1.2; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+        }
+        
+        .drop-zone {
+            flex: 1; 
+            border: 0.5px dashed #4a6d7c; 
+            border-radius: 12px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 25px; 
+            cursor: pointer; 
+            background: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.1s ease;
+        }
+        
+        .drop-zone:hover { 
+            background: rgba(255, 255, 255, 0.6); 
+            transform: translateY(-2px);
+        }
+        
+        .upload-icon { 
+            font-size: 40px; 
+            color: #4a6d7c; 
+            margin-bottom: 10px; 
+        }
+        
+        .upload-text { 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: #2c3e50; 
+            margin-bottom: 8px; 
+        }
+        
+        .upload-subtext { 
+            font-size: 14px; 
+            color: #576574; 
+        }
+        
+        .upload-subtext span { 
+            color: #b97980; 
+            text-decoration: underline; 
+        }
+        
+        .upload-limit { 
+            font-size: 12px; 
+            color: #576574; 
+            margin-top: 12px; 
+        }
+
+        #feedbackArea { 
+            display: none; 
+            text-align: center; 
+        }
+        
+        .success-msg { 
+            color: #147a61; 
+            font-size: 18px; 
+            font-weight: 700; 
+            margin-bottom: 4px; 
+        }
+        
+        .reset-hint { 
+            color: #e67e22; 
+            font-size: 14px; 
+            font-weight: 500; 
+            margin-top: 4px;
+        }
+
+        /* 文件列表样式 */
+        .file-list-container {
+            width: 100%;
+            margin: 8px 0;
+        }
+        
+        .file-list-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .file-list-scroll {
+            max-height: 180px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            border: 1px solid rgba(74, 109, 124, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 4px;
+        }
+        
+        .file-list {
+            font-size: 12px;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 4px;
+            margin: 1px 0;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            border-left: 2px solid #4a6d7c;
+            min-height: 20px;
+            position: relative;
+        }
+        
+        .file-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 8px;
+            font-size: 10px;
+            max-width: 180px;
+        }
+        
+        .file-status {
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 8px;
+            background: #6b9c70;
+            color: white;
+            white-space: nowrap;
+        }
+        
+        /* 文件名悬停提示 */
+        .file-item:hover::after {
+            content: attr(title);
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: normal;
+            max-width: 300px;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .progress-wrapper { 
+            position: relative; 
+            height: 24px; 
+            background: rgba(0, 0, 0, 0.1); 
+            border-radius: 12px; 
+            overflow: hidden; 
+            display: none; 
+        }
+        
+        .progress-bar { 
+            height: 100%; 
+            width: 0%; 
+            background: linear-gradient(90deg, #77b282, #429852, #0c7820);
+            transition: width 0.8s ease;
+        }
+        
+        .progress-text { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            top: 0; 
+            left: 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 12px; 
+            font-weight: 500; 
+            color: #ffffff; 
+            pointer-events: none; 
+        }
+
+        .settings-panel { 
+            flex: 1; 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 10px; 
+        }
+        
+        .setting-unit { 
+            background: rgba(170, 180, 180, 0.75); 
+            border-radius: 12px; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease;
+        }
+        
+        .setting-unit:hover {
+            transform: translateY(-2px);
+        }
+        
+        .unit-full { 
+            grid-column: span 1; 
+        }
+        
+        .unit-header { 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #2c3e50; 
+            margin-bottom: 8px; 
+        }
+
+        /* 裁剪线开关按钮样式 */
+        .toggle-btn { 
+            width: 70%; 
+            height: 35px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.1s ease; 
+        }
+        
+        .btn-on { 
+            background: #6b9c70; 
+            color: white; 
+        }
+        
+        .btn-off { 
+            background: #cbd5e1; 
+            color: #64748b; 
+        }
+
+        .mode-group { 
+            display: flex; 
+            gap: 20px; 
+            width: 90%; 
+        }
+        
+        .btn-mode { 
+            flex: 1; 
+            height: 38px; 
+            border-radius: 12px; 
+            border: 1px solid #cbd5e1; 
+            background: #cbd5e1; 
+            color: #4a6d7c; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.1s ease;
+        }
+        
+        .btn-mode:hover {
+            border-color: #4a6d7c;
+        }
+        
+        .btn-mode.active { 
+            background: #6b9c70; 
+            color: white; 
+            border-color: #4a6d7c; 
+        }
+
+        .toolbar { 
+            display: flex; 
+            gap: 20px; 
+            margin-top: 20px; 
+        }
+        
+        .btn-large { 
+            flex: 1; 
+            height: 52px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 700; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            color: white; 
+            transition: all 0.1s ease;
+        }
+        
+        .btn-large:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-pdf { 
+            background: #94a3b8; 
+        }
+        
+        .btn-print { 
+            background: #147a61; 
+        }
+        
+        .btn-reset { 
+            background: white; 
+            color: #64748b; 
+            border: 1px solid #cbd5e1; 
+        }
+        
+        .btn-reset:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+        
+        .btn-large:disabled { 
+            opacity: 0.3; 
+            cursor: not-allowed; 
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        #previewGrid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 20px; 
+            margin-top: 20px; 
+            width: 100%;
+        }
+        
+        .preview-page { 
+            background: white; 
+            position: relative; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            margin: 0 auto; 
+            overflow: hidden; 
+            transition: transform 0.1s ease;
+            width: 100%;
+        }
+        
+        .preview-page:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .v-page { 
+            aspect-ratio: 210/297; 
+        } 
+        
+        .h-page { 
+            aspect-ratio: 297/210; 
+        }
+
+        /* 裁剪线样式 */
+        .cut-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10; /* 在截图之上 */
+        }
+        
+        .cut-line.vertical {
+            border-left: 0.5px dashed #D35400; /* 深橙色 */
+            height: 100%;
+        }
+        
+        .cut-line.horizontal {
+            border-top: 0.5px dashed #D35400; /* 深橙色 */
+            width: 100%;
+        }
+
+        .slot { 
+            position: absolute; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-sizing: border-box;
+            background: white;
+            overflow: hidden;
+            z-index: 1; /* 低于裁剪线 */
+        }
+        
+        .slot img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            display: block;
+        }
+
+        /* 浏览器兼容性警告 */
+        .browser-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: #ffcc00;
+            color: #333;
+            padding: 10px 15px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            display: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .browser-warning-content {
+            max-width: 1050px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .browser-warning-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #333;
+            padding: 0 10px;
+        }
+
+        @media print {
+            /* 隐藏所有非打印内容 */
+            body * {
+                visibility: hidden;
+            }
+            
+            /* 只显示预览网格 */
+            #previewGrid,
+            #previewGrid * {
+                visibility: visible;
+            }
+            
+            /* 强制纵向打印样式 - 1页6张 */
+            body.mode-6 .preview-page {
+                size: A4 portrait !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                transform: none !important;
+                box-shadow: none !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                overflow: visible !important;
+            }
+            
+            /* 强制横向打印样式 - 1页12张 */
+            body.mode-12 .preview-page {
+                size: A4 landscape !important;
+                width: 297mm !important;
+                height: 210mm !important;
+                transform: none !important;
+                box-shadow: none !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                overflow: visible !important;
+            }
+            
+            /* 打印时的裁剪线样式 */
+            .cut-line.vertical {
+                border-left: 0.3mm dashed #AAAAAA !important; /* 浅中灰色 */
+            }
+            
+            .cut-line.horizontal {
+                border-top: 0.3mm dashed #AAAAAA !important; /* 浅中灰色 */
+            }
+            
+            /* 页面设置 */
+            @page {
+                margin: 0;
+                size: auto;
+            }
+            
+            /* 针对不同模式设置页面方向 */
+            @page portrait-page {
+                size: A4 portrait;
+                margin: 0;
+            }
+            
+            @page landscape-page {
+                size: A4 landscape;
+                margin: 0;
+            }
+            
+            body.mode-6 .preview-page {
+                page: portrait-page;
+            }
+            
+            body.mode-12 .preview-page {
+                page: landscape-page;
+            }
+            
+            /* 重置body样式 */
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                min-height: auto;
+                animation: none !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            
+            /* 主卡片样式重置 */
+            .main-card {
+                background: none !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+                backdrop-filter: none !important;
+                width: 100% !important;
+                height: auto !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            
+            /* 隐藏所有非必要元素 */
+            .header,
+            .top-layout,
+            .toolbar,
+            .drop-zone-container,
+            .settings-panel,
+            .progress-wrapper,
+            .upload-icon,
+            .upload-text,
+            .upload-subtext,
+            .upload-limit,
+            .browser-warning,
+            .print-dialog,
+            .help-dialog,
+            .footer,
+            .file-list-container,
+            .success-msg,
+            .reset-hint {
+                display: none !important;
+            }
+            
+            /* 预览网格打印样式 */
+            #previewGrid {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                position: static !important;
+                top: auto !important;
+                left: auto !important;
+                grid-template-columns: none !important;
+                gap: 0 !important;
+                overflow: visible !important;
+            }
+            
+            /* 预览页面打印样式 */
+            .preview-page {
+                box-shadow: none !important;
+                margin: 0 !important;
+                border: none !important;
+                overflow: visible !important;
+                transform: none !important;
+                position: relative !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                display: block !important;
+                background: white !important;
+            }
+            
+            /* 最后一页不添加分页 */
+            .preview-page:last-child {
+                page-break-after: auto !important;
+            }
+            
+            /* 槽位样式 */
+            .slot {
+                background: white !important;
+            }
+            
+            .slot img {
+                filter: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* 确保打印时预览页面完全填充纸张 */
+            .preview-page.v-page {
+                width: 210mm !important;
+                height: 297mm !important;
+                aspect-ratio: auto !important;
+            }
+            
+            .preview-page.h-page {
+                width: 297mm !important;
+                height: 210mm !important;
+                aspect-ratio: auto !important;
+            }
+        }
+        
+        .print-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .print-dialog-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .print-dialog h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+        
+        .print-dialog p {
+            color: #576574;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .print-dialog strong {
+            color: #e67e22;
+        }
+        
+        .print-dialog-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .print-dialog-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .print-dialog-confirm {
+            background: #147a61;
+            color: white;
+        }
+        
+        .print-dialog-confirm:hover {
+            background: #0d5d49;
+        }
+        
+        .print-dialog-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .print-dialog-cancel:hover {
+            background: #e2e8f0;
+        }
+        
+        .print-tip {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        /* 帮助弹窗样式 */
+        .help-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+        
+        .help-dialog-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .help-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #64748b;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .help-close:hover {
+            background: #f1f5f9;
+            color: #2c3e50;
+        }
+        
+        .help-dialog h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+            padding-right: 30px;
+        }
+        
+        .help-section {
+            margin-bottom: 20px;
+        }
+        
+        .help-section h3 {
+            color: #147a61;
+            font-size: 18px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .help-section p {
+            color: #576574;
+            line-height: 1.6;
+            margin-bottom: 8px;
+            padding-left: 28px;
+        }
+        
+        .help-tip {
+            background: rgba(20, 122, 97, 0.1);
+            border-left: 3px solid #147a61;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+        }
+        
+        /* 底部版权信息样式 */
+        .footer {
+            width: 100%;
+            max-width: 1050px;
+            text-align: center;
+            padding: 15px 0;
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        
+        .footer a {
+            color: #147a61;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease;
+        }
+        
+        .footer a:hover {
+            color: #0d5d49;
+            text-decoration: underline;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .file-name {
+                max-width: 120px;
+                font-size: 9px;
+            }
+            
+            .file-status {
+                font-size: 8px;
+                padding: 1px 4px;
+            }
+            
+            .help-dialog-content {
+                padding: 20px;
+                max-height: 85vh;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .help-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            
+            #previewGrid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+            /* 【新增：响应式调整首页按钮】 */
+            .home-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                right: 76px; /* 相应调整位置 */
+            }
+            
+            /* 【新增：响应式调整发票按钮】 */
+            .invoice-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                right: 38px; /* 相应调整位置 */
+            }
+            /* 【结束新增】 */
+        }
+    </style>
+</head>
+<body id="theBody" class="mode-12">
+    <!-- 浏览器兼容性警告 -->
+    <div class="browser-warning" id="browserWarning">
+        <div class="browser-warning-content">
+            <div>⚠️ 您的浏览器可能不完全支持所有功能，建议使用 Chrome、Edge 或 Firefox 最新版本</div>
+            <button class="browser-warning-close" onclick="closeBrowserWarning()">×</button>
+        </div>
+    </div>
+    
+    <!-- 打印提示对话框 -->
+    <div class="print-dialog" id="printDialog">
+        <div class="print-dialog-content">
+            <h3>🖨️ 打印设置提示</h3>
+            <p>当前布局模式：<strong id="printModeText">1页12张(横向)</strong></p>
+            <p>请在稍后的打印设置中确认以下事项：</p>
+            <p>1. <strong>纸张方向</strong>：设置为 <strong id="printOrientationText">横向</strong></p>
+            <p>2. <strong>纸张大小</strong>：设置为 <strong>A4</strong></p>
+            <p>3. <strong>页边距</strong>：设置为 <strong>无</strong> 或 <strong>最小</strong></p>
+            <p>4. <strong>缩放比例</strong>：设置为 <strong>100%</strong> 或 <strong>默认</strong></p>
+            <p class="print-tip">💡 提示：裁剪线已开启，打印后可按虚线裁剪</p>
+            <div class="print-dialog-buttons">
+                <button class="print-dialog-btn print-dialog-confirm" id="confirmPrint">确认设置并打印</button>
+                <button class="print-dialog-btn print-dialog-cancel" id="cancelPrint">取消打印</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 使用说明弹窗 -->
+    <div class="help-dialog" id="helpDialog">
+        <div class="help-dialog-content">
+            <button class="help-close" onclick="closeHelp()">×</button>
+            <h2>📚 使用说明</h2>
+            
+            <div class="help-section">
+                <h3>📋 工具简介</h3>
+                <p>手机截图批量打印是一个专为高效打印竖版手机截图设计的在线工具，支持将多张截图智能排版到A4纸上，实现规范、经济的批量打印。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🚀 快速开始</h3>
+                <p><strong>1. 加载截图文件</strong>：将截图拖入虚线区域或点击"点击加载"按钮</p>
+                <p><strong>2. 选择打印布局</strong>：1页6张(纵向)或1页12张(横向)布局</p>
+                <p><strong>3. 调整裁剪线</strong>：根据需要开启或关闭裁剪线</p>
+                <p><strong>4. 预览与调整</strong>：查看排版效果，确认无误</p>
+                <p><strong>5. 导出与打印</strong>：导出PDF或直接打印</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🧩 布局选择</h3>
+                <p><strong>1页6张(纵向)</strong>：A4纸纵向排版，3列×2行，适合标准打印</p>
+                <p><strong>1页12张(横向)</strong>：A4纸横向排版，6列×2行，经济高效</p>
+                <p>💡 所有截图自动按比例缩放，不裁剪，保持原比例</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>✂️ 裁剪线功能</h3>
+                <p><strong>作用</strong>：在截图间隔中添加参考虚线，帮助打印后精确裁剪</p>
+                <p><strong>显示</strong>：预览时显示橙色虚线，打印时显示浅灰色虚线</p>
+                <p><strong>位置</strong>：在截图间隔正中间（4.3mm间距中间）</p>
+                <p>💡 建议开启裁剪线，特别是需要精确裁剪时</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>⚙️ 打印设置</h3>
+                <p><strong>智能方向检测</strong>：根据布局自动设置打印方向</p>
+                <p><strong>固定边距</strong>：页边距和截图间距均为4.3mm，确保打印精度</p>
+                <p>💡 1页6张模式自动设置为纵向打印，1页12张模式自动设置为横向打印</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>💾 导出与打印</h3>
+                <p><strong>导出 PDF</strong>：将所有截图合并成一个PDF文件保存</p>
+                <p><strong>立即打印</strong>：直接调用浏览器打印功能，智能提示打印设置</p>
+                <p><strong>清空重置</strong>：清除所有文件，重新开始新任务</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🎯 使用技巧</h3>
+                <p><strong>最佳实践</strong>：确保截图为竖版3:4比例，效果最佳</p>
+                <p><strong>测试打印</strong>：重要截图先导出一页测试打印效果</p>
+                <p><strong>裁剪建议</strong>：沿着裁剪线虚线中心裁剪最准确</p>
+                <p><strong>文件列表</strong>：可显示已加载的所有文件名，悬停查看完整名称</p>
+            </div>
+            
+            <div class="help-tip">
+                <strong>💡 温馨提示：</strong> 打印前请确保打印机已连接并有足够纸张。建议先导出一页进行测试打印。
+            </div>
+            
+            <div class="help-section">
+                <h3>⚠️ 重要提示</h3>
+                <p><strong>格式支持</strong>：支持JPG、PNG、WEBP等常见图片格式</p>
+                <p><strong>比例保持</strong>：所有截图自动按(3:4)比例缩放，不裁剪</p>
+                <p><strong>浏览器要求</strong>：推荐使用 Chrome、Edge、Firefox 最新版本</p>
+                <p><strong>文件限制</strong>：单次最多处理50个文件，单个文件建议不超过10MB</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🛠️ 故障排除</h3>
+                <p><strong>文件无法加载</strong>：检查是否为支持的图片格式</p>
+                <p><strong>预览不显示</strong>：尝试清空重置后重新加载</p>
+                <p><strong>打印效果不佳</strong>：检查打印机设置，确保为高质量打印</p>
+                <p><strong>浏览器警告</strong>：建议更换为推荐浏览器</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>📞 支持与反馈</h3>
+                <p>如有问题或建议，请发送邮件至：😔🤷~算了，那还是别用了😑</p>
+                <p>反馈时请注明：遇到的问题、浏览器版本、截图数量和大小</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>📄 免责声明</h3>
+                <p>1. 本工具仅处理图片文件，不存储用户数据</p>
+                <p>2. 打印效果受打印机、纸张质量等因素影响</p>
+                <p>3. 建议重要截图先测试打印再批量处理</p>
+                <p>4. 请遵守相关版权规定使用截图</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-card">
+        <div class="header">
+            <h1>手机截图批量排版打印</h1>
+            <!-- 【新增：首页按钮】 -->
+            <button class="home-btn" onclick="goToHomePage()" title="更多工具">🧰</button>
+            <!-- 【新增：发票打印按钮】 -->
+            <button class="invoice-btn" onclick="openInvoiceTool()" title="发票打印">🧾</button>
+            <!-- 【结束新增】 -->
+            <button class="help-btn" onclick="showHelp()" title="使用说明">❓</button>
+        </div>
+        
+        <div class="top-layout">
+            <div class="drop-zone-container">
+                <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileIn').click()">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">将截图拖入此处</div>
+                    <div class="upload-subtext">或 <span>点击加载</span> (支持多选)</div>
+                    <div class="upload-limit">✨ 自动按比例缩放，不裁剪，每次不超过50张 ✨</div>
+                    <input type="file" id="fileIn" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display:none;">
+                </div>
+                
+                <div id="feedbackArea" class="drop-zone">
+                    <div id="successInfo" class="success-msg"></div>
+                    
+                    <!-- 文件列表区域 -->
+                    <div class="file-list-container">
+                        <div class="file-list-header">📄 已加载文件 (<span id="fileCount">0</span>)</div>
+                        <div class="file-list-scroll">
+                            <div class="file-list" id="fileList"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="reset-hint">💡 处理新的文件前请先点击 "清空重置" 💡</div>
+                </div>
+                
+                <div class="progress-wrapper" id="progressWrapper">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-text" id="progressText">0 / 0</div>
+                </div>
+            </div>
+
+            <div class="settings-panel">
+                <!-- 裁剪线开关 -->
+                <div class="setting-unit">
+                    <div class="unit-header">✂️ 裁剪线</div>
+                    <button id="cutLineToggle" class="toggle-btn btn-on" onclick="toggleCutLines()">已开启</button>
+                </div>
+                
+                <!-- 布局选择 -->
+                <div class="setting-unit unit-full">
+                    <div class="unit-header">🧩 布局选择</div>
+                    <div class="mode-group">
+                        <button id="m6" class="btn-mode" onclick="setMode(6)">1页6张(纵向)</button>
+                        <button id="m12" class="btn-mode active" onclick="setMode(12)">1页12张(横向)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button id="exportBtn" class="btn-large btn-pdf" disabled onclick="savePDF()">💾 导出 PDF</button>
+            <button id="printBtn" class="btn-large btn-print" disabled onclick="showPrintDialog()">🖨️ 立即打印</button>
+            <button class="btn-large btn-reset" onclick="resetApp()">🧹 清空重置</button>
+        </div>
+        
+        <div id="previewGrid"></div>
+    </div>
+    <div class="footer">
+        Copyright © 2026 <a href="https://topmer.top/" target="_blank">Topmer</a>
+        | v2.1.0
+    </div>
+    <script>
+        // 【新增：返回首页功能】
+        function goToHomePage() {
+            try {
+                // 这里可以替换成您的主页网址
+                const homeUrl = "https://888.topmer.top/";
+                
+                // 在当前页跳转
+                window.location.href = homeUrl;
+                
+            } catch (error) {
+                console.error('返回首页时出错:', error);
+                alert('无法返回首页，请稍后重试！');
+            }
+        }
+        
+        // 【新增：发票工具跳转功能】
+        function openInvoiceTool() {
+            try {
+                // 这里可以替换成您的发票工具网址
+                const invoiceUrl = "https://888.topmer.top/fp";
+                
+                // 在新标签页打开
+                window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+                
+            } catch (error) {
+                console.error('打开发票工具时出错:', error);
+                alert('无法打开发票工具，请稍后重试！');
+            }
+        }
+        // 【结束新增】
+        
+        const CONFIG = {
+            IMAGE_QUALITY: 0.9,
+            MARGIN_MM: 4.3,
+            SPACING_MM: 4.3,
+            TARGET_WIDTH: 1080,
+            TARGET_HEIGHT: 2400,
+            TARGET_RATIO: 1080 / 2400, // 0.45 (3:4)
+            MAX_FILES: 50,
+            // 屏幕DPI转换：1mm = 3.779527559055118像素（96DPI）
+            MM_TO_PX: 96 / 25.4
+        };
+
+        const AppState = {
+            photoFiles: [], // 存储处理后的截图数据 {dataUrl, originalName, dimensions}
+            originalFileNames: [], // 保存原始文件名
+            originalFiles: [], // 保存原始文件对象
+            currentMode: 12, // 6: 1页6张, 12: 1页12张
+            showCutLines: true, // 新增：裁剪线显示状态
+            isProcessing: false
+        };
+
+        const { jsPDF } = window.jspdf;
+
+        // ========== 核心计算函数 - 统一布局逻辑 ==========
+        function calculateLayout(mode) {
+            const A4_WIDTH_MM = 210;
+            const A4_HEIGHT_MM = 297;
+            const margin = CONFIG.MARGIN_MM;
+            const spacing = CONFIG.SPACING_MM;
+            
+            if (mode === 6) {
+                // 1页6张：纵向A4，3列×2行
+                const columns = 3;
+                const rows = 2;
+                const contentWidth = A4_WIDTH_MM - (margin * 2);
+                const contentHeight = A4_HEIGHT_MM - (margin * 2);
+                
+                const slotWidth = (contentWidth - (spacing * (columns - 1))) / columns;
+                const slotHeight = (contentHeight - (spacing * (rows - 1))) / rows;
+                
+                // 检查是否超出A4纸范围
+                if (slotWidth <= 0 || slotHeight <= 0) {
+                    throw new Error('计算错误：槽位尺寸无效');
+                }
+                
+                return {
+                    columns,
+                    rows,
+                    photosPerPage: columns * rows,
+                    slotWidth,
+                    slotHeight,
+                    orientation: 'portrait',
+                    pageWidth: A4_WIDTH_MM,
+                    pageHeight: A4_HEIGHT_MM,
+                    margin,
+                    spacing
+                };
+            } else {
+                // 1页12张：横向A4，6列×2行
+                const columns = 6;
+                const rows = 2;
+                const pageWidth = A4_HEIGHT_MM;  // 横向时宽度297mm
+                const pageHeight = A4_WIDTH_MM;  // 高度210mm
+                const contentWidth = pageWidth - (margin * 2);
+                const contentHeight = pageHeight - (margin * 2);
+                
+                const slotWidth = (contentWidth - (spacing * (columns - 1))) / columns;
+                const slotHeight = (contentHeight - (spacing * (rows - 1))) / rows;
+                
+                // 检查是否超出A4纸范围
+                if (slotWidth <= 0 || slotHeight <= 0) {
+                    throw new Error('计算错误：槽位尺寸无效');
+                }
+                
+                return {
+                    columns,
+                    rows,
+                    photosPerPage: columns * rows,
+                    slotWidth,
+                    slotHeight,
+                    orientation: 'landscape',
+                    pageWidth,
+                    pageHeight,
+                    margin,
+                    spacing
+                };
+            }
+        }
+
+        // ========== 裁剪线功能 ==========
+        function toggleCutLines() {
+            AppState.showCutLines = !AppState.showCutLines;
+            const btn = document.getElementById('cutLineToggle');
+            
+            if (btn) {
+                btn.innerText = AppState.showCutLines ? '已开启' : '已关闭';
+                btn.className = `toggle-btn ${AppState.showCutLines ? 'btn-on' : 'btn-off'}`;
+            }
+            
+            // 立即重绘预览
+            renderPreview();
+        }
+
+        // ========== 浏览器兼容性检测 ==========
+        function checkBrowserCompatibility() {
+            const missingAPIs = [];
+            
+            if (!window.File) missingAPIs.push('File API');
+            if (!window.FileReader) missingAPIs.push('FileReader API');
+            if (!window.Promise) missingAPIs.push('Promise API');
+            if (!window.HTMLCanvasElement) missingAPIs.push('Canvas API');
+            
+            if (missingAPIs.length > 0) {
+                console.warn('浏览器不支持以下必要API:', missingAPIs.join(', '));
+                document.getElementById('browserWarning').style.display = 'block';
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function closeBrowserWarning() {
+            document.getElementById('browserWarning').style.display = 'none';
+        }
+
+        // ========== 使用说明弹窗功能 ==========
+        function showHelp() {
+            try {
+                document.getElementById('helpDialog').style.display = 'flex';
+            } catch (error) {
+                console.error('显示帮助弹窗时出错:', error);
+            }
+        }
+        
+        function closeHelp() {
+            try {
+                document.getElementById('helpDialog').style.display = 'none';
+            } catch (error) {
+                console.error('关闭帮助弹窗时出错:', error);
+            }
+        }
+
+        // ========== 文件列表更新函数 ==========
+        function updateFileList(files) {
+            try {
+                const fileList = document.getElementById('fileList');
+                const fileCount = document.getElementById('fileCount');
+                
+                if (!fileList || !fileCount) {
+                    console.warn('updateFileList: 文件列表元素不存在');
+                    return;
+                }
+                
+                if (!files || files.length === 0) {
+                    fileList.innerHTML = '';
+                    fileCount.textContent = '0';
+                    return;
+                }
+                
+                fileCount.textContent = files.length;
+                
+                // 生成文件列表HTML，添加title属性用于悬停提示
+                fileList.innerHTML = files.map((file, index) => {
+                    const displayName = file.name.length > 25 
+                        ? file.name.substring(0, 22) + '...' 
+                        : file.name;
+                        
+                    return `
+                        <div class="file-item" title="文件名: ${file.name}">
+                            <div class="file-name" title="${file.name}">
+                                ${index + 1}. ${displayName}
+                            </div>
+                            <div class="file-status">✓ 已加载</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('更新文件列表时出错:', error);
+            }
+        }
+
+        // ========== 处理单张图片 ==========
+        async function processImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    
+                    img.onload = function() {
+                        // 创建canvas进行比例处理
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        if (!ctx) {
+                            reject(new Error('无法获取canvas上下文'));
+                            return;
+                        }
+                        
+                        // 计算保持1080×2400比例的尺寸
+                        const currentRatio = img.width / img.height;
+                        const targetRatio = CONFIG.TARGET_RATIO;
+                        
+                        let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+                        
+                        if (currentRatio > targetRatio) {
+                            // 图片更宽，按高度缩放
+                            drawHeight = CONFIG.TARGET_HEIGHT;
+                            drawWidth = drawHeight * currentRatio;
+                            offsetX = (drawWidth - CONFIG.TARGET_WIDTH) / 2;
+                        } else {
+                            // 图片更高或比例相同，按宽度缩放
+                            drawWidth = CONFIG.TARGET_WIDTH;
+                            drawHeight = drawWidth / currentRatio;
+                            offsetY = (drawHeight - CONFIG.TARGET_HEIGHT) / 2;
+                        }
+                        
+                        canvas.width = drawWidth;
+                        canvas.height = drawHeight;
+                        
+                        // 填充白色背景
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, drawWidth, drawHeight);
+                        
+                        // 绘制图片，保持比例
+                        ctx.drawImage(img, 0, 0, img.width, img.height, 
+                                     offsetX, offsetY, CONFIG.TARGET_WIDTH, CONFIG.TARGET_HEIGHT);
+                        
+                        // 转换为dataURL
+                        const imageData = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
+                        
+                        resolve({
+                            dataUrl: imageData,
+                            originalName: file.name,
+                            dimensions: {
+                                originalWidth: img.width,
+                                originalHeight: img.height,
+                                processedWidth: drawWidth,
+                                processedHeight: drawHeight
+                            }
+                        });
+                        
+                        // 清理canvas内存
+                        canvas.width = 0;
+                        canvas.height = 0;
+                    };
+                    
+                    img.onerror = function() {
+                        reject(new Error('图片加载失败: ' + file.name));
+                    };
+                    
+                    img.src = e.target.result;
+                };
+                
+                reader.onerror = function() {
+                    reject(new Error('文件读取失败: ' + file.name));
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ========== 处理多个文件 ==========
+        async function handleFiles(files) {
+            if (!files || files.length === 0) {
+                console.error('handleFiles: 未接收到文件');
+                return;
+            }
+
+            if (AppState.isProcessing) {
+                alert('正在处理文件中，请稍候...');
+                return;
+            }
+
+            // 过滤图片文件
+            const imageFiles = Array.from(files).filter(f => 
+                f.type.startsWith('image/') && 
+                ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'].includes(f.type)
+            );
+            
+            if (!imageFiles.length) {
+                alert('请选择图片文件（支持JPG、PNG、WEBP格式）！');
+                return;
+            }
+
+            if (imageFiles.length > CONFIG.MAX_FILES) {
+                alert(`最多支持${CONFIG.MAX_FILES}个文件，已自动截取前${CONFIG.MAX_FILES}个`);
+                imageFiles.length = CONFIG.MAX_FILES;
+            }
+
+            AppState.isProcessing = true;
+            AppState.photoFiles = [];
+            AppState.originalFileNames = imageFiles.map(f => f.name);
+            AppState.originalFiles = imageFiles;
+            
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (!progressWrapper || !progressBar || !progressText) {
+                console.error('进度条元素不存在');
+                AppState.isProcessing = false;
+                return;
+            }
+            
+            progressWrapper.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressText.innerText = `准备中...`;
+
+            try {
+                for (let i = 0; i < imageFiles.length; i++) {
+                    progressText.innerText = `处理中 ${i + 1} / ${imageFiles.length}`;
+                    
+                    try {
+                        const processedImage = await processImageFile(imageFiles[i]);
+                        AppState.photoFiles.push(processedImage);
+                        
+                        const progress = Math.round(((i + 1) / imageFiles.length) * 100);
+                        progressBar.style.width = `${progress}%`;
+                        
+                    } catch (error) {
+                        console.error(`文件 ${imageFiles[i].name} 处理失败:`, error);
+                        // 继续处理其他文件
+                        continue;
+                    }
+                }
+                
+                const dropZone = document.getElementById('dropZone');
+                const feedbackArea = document.getElementById('feedbackArea');
+                const successInfo = document.getElementById('successInfo');
+                
+                if (!dropZone || !feedbackArea || !successInfo) {
+                    throw new Error('必要的DOM元素不存在');
+                }
+                
+                dropZone.style.display = 'none';
+                feedbackArea.style.display = 'flex';
+                successInfo.innerText = `✅ 已成功加载 ${AppState.photoFiles.length} 张截图 ✨`;
+                
+                // 更新文件列表
+                updateFileList(imageFiles);
+                
+                const exportBtn = document.getElementById('exportBtn');
+                const printBtn = document.getElementById('printBtn');
+                
+                if (exportBtn) exportBtn.disabled = false;
+                if (printBtn) printBtn.disabled = false;
+                
+                renderPreview();
+                
+            } catch (error) {
+                console.error('文件处理失败:', error);
+                alert('文件处理失败，请重试！\n错误信息: ' + error.message);
+                resetApp();
+            } finally {
+                AppState.isProcessing = false;
+                if (progressWrapper) {
+                    progressWrapper.style.display = 'none';
+                }
+            }
+        }
+
+        // ========== 渲染预览（含裁剪线） ==========
+        function renderPreview() {
+            try {
+                const grid = document.getElementById('previewGrid');
+                if (!grid) {
+                    console.error('renderPreview: 预览容器不存在');
+                    return;
+                }
+                
+                grid.innerHTML = '';
+                
+                if (!AppState.photoFiles.length) return;
+                
+                const layout = calculateLayout(AppState.currentMode);
+                const totalPages = Math.ceil(AppState.photoFiles.length / layout.photosPerPage);
+                
+                for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                    const pageDiv = document.createElement('div');
+                    
+                    const pageClass = layout.orientation === 'portrait' ? 'v-page' : 'h-page';
+                    pageDiv.className = `preview-page ${pageClass}`;
+                    
+                    // 创建截图槽位
+                    for (let row = 0; row < layout.rows; row++) {
+                        for (let col = 0; col < layout.columns; col++) {
+                            const slotIndex = row * layout.columns + col;
+                            const fileIndex = pageIndex * layout.photosPerPage + slotIndex;
+                            
+                            if (fileIndex >= AppState.photoFiles.length) continue;
+                            
+                            const slot = document.createElement('div');
+                            slot.className = 'slot';
+                            
+                            // 计算位置 - 使用百分比确保缩放正确
+                            const leftPercent = (layout.margin + (col * (layout.slotWidth + layout.spacing))) / layout.pageWidth * 100;
+                            const topPercent = (layout.margin + (row * (layout.slotHeight + layout.spacing))) / layout.pageHeight * 100;
+                            const widthPercent = layout.slotWidth / layout.pageWidth * 100;
+                            const heightPercent = layout.slotHeight / layout.pageHeight * 100;
+                            
+                            slot.style.left = `${leftPercent}%`;
+                            slot.style.top = `${topPercent}%`;
+                            slot.style.width = `${widthPercent}%`;
+                            slot.style.height = `${heightPercent}%`;
+                            
+                            const img = document.createElement('img');
+                            img.src = AppState.photoFiles[fileIndex].dataUrl;
+                            img.alt = `截图 ${fileIndex + 1}`;
+                            img.style.objectFit = 'contain';
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            
+                            slot.appendChild(img);
+                            pageDiv.appendChild(slot);
+                        }
+                    }
+                    
+                    // 添加裁剪线（如果开启）
+                    if (AppState.showCutLines) {
+                        // 垂直裁剪线（列之间）
+                        for (let col = 1; col < layout.columns; col++) {
+                            const lineX = layout.margin + (col * layout.slotWidth) + ((col - 0.5) * layout.spacing);
+                            const lineXPercent = lineX / layout.pageWidth * 100;
+                            
+                            const line = document.createElement('div');
+                            line.className = 'cut-line vertical';
+                            line.style.left = `${lineXPercent}%`;
+                            line.style.top = '0%';
+                            line.style.height = '100%';
+                            
+                            pageDiv.appendChild(line);
+                        }
+                        
+                        // 水平裁剪线（行之间）
+                        for (let row = 1; row < layout.rows; row++) {
+                            const lineY = layout.margin + (row * layout.slotHeight) + ((row - 0.5) * layout.spacing);
+                            const lineYPercent = lineY / layout.pageHeight * 100;
+                            
+                            const line = document.createElement('div');
+                            line.className = 'cut-line horizontal';
+                            line.style.top = `${lineYPercent}%`;
+                            line.style.left = '0%';
+                            line.style.width = '100%';
+                            
+                            pageDiv.appendChild(line);
+                        }
+                    }
+                    
+                    grid.appendChild(pageDiv);
+                }
+                
+                updateModeButtons();
+                
+            } catch (error) {
+                console.error('渲染预览时发生错误:', error);
+                
+                // 提供降级体验
+                const grid = document.getElementById('previewGrid');
+                if (grid) {
+                    grid.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #e67e22;">
+                            <p>⚠️ 预览渲染失败</p>
+                            <p>请尝试调整设置或重新加载文件</p>
+                            <p>错误信息: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // ========== 设置模式 ==========
+        function setMode(mode) {
+            if (AppState.currentMode === mode) return;
+            
+            AppState.currentMode = mode;
+            
+            try {
+                const body = document.getElementById('theBody');
+                if (body) {
+                    body.className = `mode-${mode}`;
+                }
+                renderPreview();
+            } catch (error) {
+                console.error('设置模式时出错:', error);
+            }
+        }
+
+        // ========== 更新模式按钮 ==========
+        function updateModeButtons() {
+            try {
+                const m6 = document.getElementById('m6');
+                const m12 = document.getElementById('m12');
+                
+                if (m6) m6.classList.toggle('active', AppState.currentMode === 6);
+                if (m12) m12.classList.toggle('active', AppState.currentMode === 12);
+            } catch (error) {
+                console.error('更新模式按钮时出错:', error);
+            }
+        }
+
+        // ========== 保存PDF（含裁剪线） ==========
+        async function savePDF() {
+            if (!AppState.photoFiles.length) {
+                console.warn('savePDF: 没有可导出的文件');
+                alert('请先加载截图文件！');
+                return;
+            }
+            
+            try {
+                const layout = calculateLayout(AppState.currentMode);
+                
+                const doc = new jsPDF({
+                    orientation: layout.orientation,
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                if (!doc) {
+                    throw new Error('无法创建PDF文档');
+                }
+                
+                const totalPages = Math.ceil(AppState.photoFiles.length / layout.photosPerPage);
+                
+                for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                    if (pageIndex > 0) {
+                        doc.addPage();
+                    }
+                    
+                    for (let row = 0; row < layout.rows; row++) {
+                        for (let col = 0; col < layout.columns; col++) {
+                            const slotIndex = row * layout.columns + col;
+                            const fileIndex = pageIndex * layout.photosPerPage + slotIndex;
+                            
+                            if (fileIndex >= AppState.photoFiles.length) break;
+                            
+                            // 计算位置 - 与预览使用相同逻辑
+                            const x = layout.margin + (col * (layout.slotWidth + layout.spacing));
+                            const y = layout.margin + (row * (layout.slotHeight + layout.spacing));
+                            
+                            doc.addImage(
+                                AppState.photoFiles[fileIndex].dataUrl,
+                                'JPEG',
+                                x,
+                                y,
+                                layout.slotWidth,
+                                layout.slotHeight
+                            );
+                        }
+                    }
+                    
+                    // 添加裁剪线（如果开启）
+                    if (AppState.showCutLines) {
+                        doc.setDrawColor(170, 170, 170); // #AAAAAA 浅中灰色
+                        doc.setLineWidth(0.3);
+                        doc.setLineDashPattern([3, 3], 0);
+                        
+                        // 垂直裁剪线（列之间）
+                        for (let col = 1; col < layout.columns; col++) {
+                            const lineX = layout.margin + (col * layout.slotWidth) + ((col - 0.5) * layout.spacing);
+                            doc.line(lineX, layout.margin, lineX, layout.pageHeight - layout.margin);
+                        }
+                        
+                        // 水平裁剪线（行之间）
+                        for (let row = 1; row < layout.rows; row++) {
+                            const lineY = layout.margin + (row * layout.slotHeight) + ((row - 0.5) * layout.spacing);
+                            doc.line(layout.margin, lineY, layout.pageWidth - layout.margin, lineY);
+                        }
+                        
+                        doc.setLineDashPattern([], 0);
+                    }
+                }
+                
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                doc.save(`截图合版_${timestamp}.pdf`);
+                
+            } catch (error) {
+                console.error('导出PDF失败:', error);
+                
+                let errorMsg = '导出PDF失败';
+                if (error.message && error.message.includes('security')) {
+                    errorMsg += '：可能是浏览器安全策略限制，请尝试在其他浏览器中操作';
+                } else if (error.message && error.message.includes('memory')) {
+                    errorMsg += '：文件过大导致内存不足，请减少文件数量';
+                }
+                
+                alert(errorMsg + '，请重试！');
+            }
+        }
+
+        // ========== 打印相关函数 ==========
+        function showPrintDialog() {
+            if (!AppState.photoFiles.length) {
+                console.warn('showPrintDialog: 没有可打印的文件');
+                alert('请先加载截图文件！');
+                return;
+            }
+            
+            try {
+                const modeText = AppState.currentMode === 6 ? '1页6张(纵向)' : '1页12张(横向)';
+                const orientationText = AppState.currentMode === 6 ? '纵向' : '横向';
+                
+                const printModeText = document.getElementById('printModeText');
+                const printOrientationText = document.getElementById('printOrientationText');
+                
+                if (printModeText) printModeText.textContent = modeText;
+                if (printOrientationText) printOrientationText.textContent = orientationText;
+                
+                const printDialog = document.getElementById('printDialog');
+                if (printDialog) {
+                    printDialog.style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('显示打印对话框时出错:', error);
+            }
+        }
+        
+        function hidePrintDialog() {
+            try {
+                const printDialog = document.getElementById('printDialog');
+                if (printDialog) {
+                    printDialog.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('隐藏打印对话框时出错:', error);
+            }
+        }
+        
+        function handlePrint() {
+            if (!AppState.photoFiles.length) {
+                console.warn('handlePrint: 没有可打印的文件');
+                return;
+            }
+            
+            try {
+                // 打印前确保正确的打印样式
+                const body = document.getElementById('theBody');
+                if (body) {
+                    // 强制设置正确的打印方向
+                    if (AppState.currentMode === 6) {
+                        body.className = 'mode-6';
+                    } else {
+                        body.className = 'mode-12';
+                    }
+                }
+                
+                setTimeout(() => {
+                    window.print();
+                    
+                    // 打印后恢复原来的状态
+                    setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        // 恢复原来的body类
+                        if (body) {
+                            body.className = `mode-${AppState.currentMode}`;
+                        }
+                    }, 100);
+                }, 100);
+            } catch (error) {
+                console.error('执行打印时出错:', error);
+                alert('打印失败，请检查打印机设置！');
+            }
+        }
+
+        // ========== 重置应用 ==========
+        function resetApp() {
+            if (AppState.isProcessing) {
+                if (!confirm('文件正在处理中，确定要重置吗？')) {
+                    return;
+                }
+            }
+            
+            try {
+                AppState.photoFiles = [];
+                AppState.originalFileNames = [];
+                AppState.originalFiles = [];
+                AppState.showCutLines = true; // 重置为默认开启
+                AppState.isProcessing = false;
+                
+                const dropZone = document.getElementById('dropZone');
+                const feedbackArea = document.getElementById('feedbackArea');
+                const previewGrid = document.getElementById('previewGrid');
+                const exportBtn = document.getElementById('exportBtn');
+                const printBtn = document.getElementById('printBtn');
+                const progressWrapper = document.getElementById('progressWrapper');
+                const cutLineToggle = document.getElementById('cutLineToggle');
+                const fileIn = document.getElementById('fileIn');
+                
+                if (dropZone) dropZone.style.display = 'flex';
+                if (feedbackArea) feedbackArea.style.display = 'none';
+                if (previewGrid) previewGrid.innerHTML = '';
+                if (exportBtn) exportBtn.disabled = true;
+                if (printBtn) printBtn.disabled = true;
+                if (progressWrapper) progressWrapper.style.display = 'none';
+                if (cutLineToggle) {
+                    cutLineToggle.innerText = '已开启';
+                    cutLineToggle.className = 'toggle-btn btn-on';
+                }
+                if (fileIn) fileIn.value = '';
+                
+                setMode(12);
+                
+                hidePrintDialog();
+                
+            } catch (error) {
+                console.error('重置应用时出错:', error);
+                alert('重置失败，请刷新页面重试！');
+            }
+        }
+
+        // ========== 初始化 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查浏览器兼容性
+            try {
+                checkBrowserCompatibility();
+            } catch (error) {
+                console.error('检查浏览器兼容性时出错:', error);
+            }
+            
+            // 文件输入事件监听
+            const fileIn = document.getElementById('fileIn');
+            if (fileIn) {
+                fileIn.addEventListener('change', function(e) {
+                    if (e.target && e.target.files) {
+                        handleFiles(e.target.files);
+                    }
+                });
+            }
+            
+            // 拖拽区域事件监听
+            const dropZone = document.getElementById('dropZone');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    dropZone.style.background = 'rgba(255, 255, 255, 0.6)';
+                    dropZone.style.borderColor = '#147a61';
+                });
+                
+                dropZone.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    dropZone.style.background = 'rgba(255, 255, 255, 0.5)';
+                    dropZone.style.borderColor = '#4a6d7c';
+                });
+                
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    dropZone.style.background = 'rgba(255, 255, 255, 0.5)';
+                    dropZone.style.borderColor = '#4a6d7c';
+                    
+                    if (e.dataTransfer && e.dataTransfer.files.length) {
+                        handleFiles(e.dataTransfer.files);
+                    }
+                });
+            }
+            
+            // 打印对话框事件监听
+            const confirmPrint = document.getElementById('confirmPrint');
+            if (confirmPrint) {
+                confirmPrint.addEventListener('click', function() {
+                    hidePrintDialog();
+                    handlePrint();
+                });
+            }
+            
+            const cancelPrint = document.getElementById('cancelPrint');
+            if (cancelPrint) {
+                cancelPrint.addEventListener('click', function() {
+                    hidePrintDialog();
+                });
+            }
+            
+            const printDialog = document.getElementById('printDialog');
+            if (printDialog) {
+                printDialog.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        hidePrintDialog();
+                    }
+                });
+            }
+            
+            // 帮助弹窗事件监听
+            const helpDialog = document.getElementById('helpDialog');
+            if (helpDialog) {
+                helpDialog.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeHelp();
+                    }
+                });
+            }
+            
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hidePrintDialog();
+                    closeHelp();
+                    closeBrowserWarning();
+                }
+            });
+            
+            // 全局错误监听
+            window.addEventListener('error', function(event) {
+                console.error('全局错误捕获:', event.error);
+                
+                if (event.error && event.error.message) {
+                    console.error('错误详情:', event.error.message);
+                }
+            });
+            
+            // 未处理的Promise拒绝
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('未处理的Promise拒绝:', event.reason);
+                event.preventDefault();
+            });
+            
+            // 初始化模式按钮
+            updateModeButtons();
+        });
+    </script>
+</body>
+</html>
