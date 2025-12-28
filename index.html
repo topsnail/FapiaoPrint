@@ -33,7 +33,7 @@
             100% { background-position: 0% 50%; } 
         }
 
-        .main-card {
+        。main-card {
             width: 100%; 
             max-width: 1050px;
             background: rgba(235, 230, 230, 0.75); 
@@ -1018,8 +1018,8 @@
                 </div>
                 
                 <div class="setting-unit">
-                    <div class="unit-header">📏 边距：<b id="marginVal">4</b>mm</div>
-                    <input type="range" min="2" max="10" value="4" id="marginRange" oninput="updateMargin(this.value)">
+                    <div class="unit-header">📏 边距：<b id="marginVal">2</b>mm</div>
+                    <input type="range" min="0" max="10" value="2" id="marginRange" oninput="updateMargin(this.value)">
                 </div>
                 
                 <div class="setting-unit unit-full">
@@ -1056,7 +1056,7 @@
         const AppState = {
             invoiceFiles: [],
             currentMode: 4,
-            currentMargin: 4,
+            currentMargin: 2,
             showLines: true,
             isProcessing: false,
             originalFileNames: [], // 保存原始文件名
@@ -1348,7 +1348,7 @@
 
         function updateMargin(value) {
             try {
-                AppState.currentMargin = parseInt(value);
+                AppState。currentMargin = parseInt(value);
                 const marginVal = document.getElementById('marginVal');
                 if (marginVal) {
                     marginVal.innerText = value;
