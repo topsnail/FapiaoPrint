@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
 	 /* 【新增：首页按钮样式，完全复制问号按钮的样式】 */
-        。home-btn {
+        .home-btn {
             position: absolute;
             right: 84px; /* 在发票按钮左侧留出间距 */
             top: 0;
@@ -25,13 +25,13 @@
             transition: all 0.2s ease;
         }
         
-        。home-btn:hover {
+        .home-btn:hover {
             background: rgba(255, 255, 255, 0.5);
             transform: translateY(-1px);
         }
         
         /* 【新增：发票按钮样式，完全复制问号按钮的样式】 */
-        。invoice-btn {
+        .invoice-btn {
             position: absolute;
             right: 42px; /* 在问号按钮左侧留出间距 */
             top: 0;
@@ -1044,8 +1044,8 @@
     <div class="main-card">
         <div class="header">
             <h1>发票批量打印助手</h1>
-			<button class="home-btn" onclick="goToHomePage()" title="返回首页">🏠</button>
-            <button class="invoice-btn" onclick="openInvoiceTool()" title="截图打印">🖼️</button>
+			<button class="home-btn" onclick="goToHomePage()" title="返回主页">🏠</button>
+            <button class="invoice-btn" onclick="openInvoiceTool()" title="发票打印">🧾</button>
             <button class="help-btn" onclick="showHelp()">❓</button>
         </div>
         
@@ -1109,14 +1109,14 @@
         <div id="previewGrid"></div>
     </div>
     <div class="footer">
-        Copyright © 2025 <a href="https://topmer.top/" target="_blank">Topmer</a>
+        Copyright © 2026 <a href="https://topmer.top/" target="_blank">Topmer</a>
         |  v2.2.0
     </div>
     <script>
 	 function goToHomePage() {
             try {
                 // 这里可以替换成您的主页网址
-                const homeUrl = "https://888.topmer.top/";
+                const homeUrl = "https://888.topmer.top";
                 
                 // 在当前页跳转
                 window.location.href = homeUrl;
@@ -1138,7 +1138,7 @@
                 
             } catch (error) {
                 console.error('打开发票工具时出错:', error);
-                alert('无法打开发票工具，请稍后重试！');
+                alert('无法打开图片工具，请稍后重试！');
             }
         }
         // 【结束新增】
@@ -1672,8 +1672,8 @@
                 if (exportBtn) exportBtn.disabled = true;
                 if (printBtn) printBtn.disabled = true;
                 if (progressWrapper) progressWrapper.style.display = 'none';
-                if (marginRange) marginRange.value = 4;
-                if (marginVal) marginVal.innerText = '4';
+                if (marginRange) marginRange.value = 2;
+                if (marginVal) marginVal.innerText = '2';
                 if (lineToggle) {
                     lineToggle.innerText = '已开启';
                     lineToggle.className = 'toggle-btn btn-on';
