@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
 	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22>🧾</text></svg>">
-    <title>发票批量打印</title>
+    <title>电子发票批量打印</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-	 /* 【新增：首页按钮样式，完全复制问号按钮的样式】 */
         .home-btn {
             position: absolute;
             right: 84px; /* 在发票按钮左侧留出间距 */
@@ -29,8 +28,7 @@
             background: rgba(255, 255, 255, 0.5);
             transform: translateY(-1px);
         }
-        
-        /* 【新增：发票按钮样式，完全复制问号按钮的样式】 */
+       
         .invoice-btn {
             position: absolute;
             right: 42px; /* 在问号按钮左侧留出间距 */
@@ -966,7 +964,7 @@
             
             <div class="help-section">
                 <h3>📋 工具简介</h3>
-                <p>发票批量打印助手是一个专为处理PDF格式电子发票设计的在线工具，支持将多张发票智能排版到A4纸上，实现高效、规范的批量打印。</p>
+                <p>电子发票批量打印助手是一个专为处理PDF格式标注电子发票设计的在线工具，支持将多张发票智能排版到A4纸上，实现高效、规范的批量打印。</p>
             </div>
             
             <div class="help-section">
@@ -1043,7 +1041,7 @@
     
     <div class="main-card">
         <div class="header">
-            <h1>发票批量打印助手</h1>
+            <h1>电子发票批量打印助手</h1>
 			<button class="home-btn" onclick="goToHomePage()" title="返回主页">🏠</button>
             <button class="invoice-btn" onclick="openInvoiceTool()" title="手机截图打印">🖼️</button>
             <button class="help-btn" onclick="showHelp()">❓</button>
@@ -1055,7 +1053,7 @@
                     <div class="upload-icon">📤</div>
                     <div class="upload-text">将 PDF 电子发票拖入此处</div>
                     <div class="upload-subtext">或 <span>点击加载</span> (支持多选)</div>
-                    <div class="upload-limit">✨ 目前仅支持 PDF 格式,每次最多处理50张 ✨</div>
+                    <div class="upload-limit">✨ 目前仅支持 PDF 格式标注电子发票,每次最多处理50张 ✨</div>
                     <input type="file" id="fileIn" accept="application/pdf" multiple style="display:none;">
                 </div>
                 
