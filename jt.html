@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* 【新增：首页按钮样式，完全复制问号按钮的样式】 */
-        。home-btn {
+        .home-btn {
             position: absolute;
             right: 84px; /* 在发票按钮左侧留出间距 */
             top: 0;
@@ -24,13 +24,13 @@
             transition: all 0.2s ease;
         }
         
-        。home-btn:hover {
+        .home-btn:hover {
             background: rgba(255, 255, 255, 0.5);
             transform: translateY(-1px);
         }
         
         /* 【新增：发票按钮样式，完全复制问号按钮的样式】 */
-        。invoice-btn {
+        .invoice-btn {
             position: absolute;
             right: 42px; /* 在问号按钮左侧留出间距 */
             top: 0;
@@ -61,7 +61,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: linear-gradient(-45deg, #4a6d7c, #8da383, #8a6a9c, #d18a66, #147a61);
             background-size: 400% 400%;
-            animation: gradientBG var(--bg-speed) ease 在finite;
+            animation: gradientBG var(--bg-speed) ease infinite;
             background-attachment: fixed;
             min-height: 100vh; 
             padding: 12px 20px 20px 20px; 
