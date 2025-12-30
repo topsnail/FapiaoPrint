@@ -134,7 +134,7 @@
     </div>
 
     <script>
-        // API基础地址（需后端配合，实际部署时替换为真实接口地址
+        // API基础地址（需后端配合，实际部署时替换为真实接口地址）
         const API_URL = '/api';
 
         /**
@@ -158,9 +158,9 @@
                 // 有留言时，遍历渲染每条留言（message-item样式包裹）
                 messagesList.innerHTML = data.messages.map(msg => `
                     <div class="message-item p-4 mb-3">
-                        <!-- 留言内容（转义HTML防止XSS） -->
+                        <!-- 留言内容（转义HTML防止XSS攻击） -->
                         <div class="text-gray-900 text-base mb-2 leading-relaxed">${escapeHtml(msg.content)}</div>
-                        <!-- 邮箱 + 时间（调用修改后的formatDate函数，保证与服务器时间一致） -->
+                        <!-- 邮箱 + 时间（调用修改后的formatDate函数，修正UTC-8偏差） -->
                         <div class="flex flex-wrap items-center gap-2 text-xs text-fb-gray">
                             <span class="font-medium">${escapeHtml(msg.email)}</span>
                             <span>·</span>
@@ -242,27 +242,39 @@
         }
 
         /**
-         * 【核心修改】日期格式化函数（保证与服务器时间一致）
-         * 解决UTC时间转换偏差，精准匹配服务器端数据库时间
-         * @param {string} dateString - 后端返回的时间字符串（支持UTC格式/本地格式）
-         * @returns {string} 格式化后的时间（YYYY-MM-DD HH:MM:SS），与服务器时间完全一致
+         * 【核心修改】日期格式化函数（修正UTC-8偏差，与服务器时间一致）
+         * 1. 手动指定服务器时区偏移（默认东八区GMT+8，可根据服务器实际时区修改）
+         * 2. 忽略前端UTC-8时区，强制计算服务器时区时间
+         * 3. 保留补零逻辑，格式统一为YYYY-MM-DD HH:MM:SS
+         * @param {string} dateString - 后端返回的时间字符串（UTC格式/本地格式）
+         * @returns {string} 格式化后的服务器时区时间
          */
         function formatDate(dateString) {
-            const date = new Date(dateString); // 解析后端返回的时间字符串
-            
-            // 方案：直接获取「服务器对应时区」的时间组件（此处适配服务器本地时区，消除UTC转换偏差）
-            // 关键：若后端返回带Z的UTC时间，该方法会自动修正为与服务器一致的本地时间
-            const year = date.getFullYear();
-            // 月份：0开始，+1后补零（保证两位显示）
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            // 日期：补零（核心：解决30号显示31号的时区偏差问题）
-            const day = String(date.getDate()).padStart(2, '0');
-            // 时分秒：补零，保证格式统一
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
+            // 1. 解析时间字符串，获取时间戳（不受时区影响，精准唯一）
+            const date = new Date(dateString);
+            const timestamp = date.getTime(); // 获取毫秒级时间戳
 
-            // 拼接为与服务器一致的时间格式
+            // 2. 手动设置服务器时区偏移（关键：修正UTC-8偏差）
+            // 服务器时区：东八区（GMT+8），偏移量为 8 * 60 * 60 * 1000 = 28800000 毫秒
+            // 若服务器为其他时区，修改此处offset即可（如GMT+9：9*3600*1000）
+            const serverTimezoneOffset = 8 * 60 * 60 * 1000; // 东八区偏移量
+
+            // 3. 计算服务器时区的时间戳（时间戳 + 服务器时区偏移 - UTC偏移）
+            // date.getTimezoneOffset()：返回当前环境时区与UTC的差值（分钟），转为毫秒
+            const localTimezoneOffset = date.getTimezoneOffset() * 60 * 1000;
+            const serverTimestamp = timestamp + serverTimezoneOffset - localTimezoneOffset;
+
+            // 4. 根据服务器时间戳创建新的Date对象
+            const serverDate = new Date(serverTimestamp);
+
+            // 5. 补零格式化，拼接为最终时间字符串
+            const year = serverDate.getFullYear();
+            const month = String(serverDate.getMonth() + 1).padStart(2, '0'); // 月份补零
+            const day = String(serverDate.getDate()).padStart(2, '0'); // 日期补零（解决30号显示31号问题）
+            const hours = String(serverDate.getHours()).padStart(2, '0'); // 小时补零
+            const minutes = String(serverDate.getMinutes()).padStart(2, '0'); // 分钟补零
+            const seconds = String(serverDate.getSeconds()).padStart(2, '0'); // 秒补零
+
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
 
