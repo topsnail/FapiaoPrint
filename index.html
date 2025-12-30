@@ -3,57 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在线留言板</title>
-    <!-- 引入Tailwind CSS CDN，用于快速构建样式 -->
+    <title>在线留言板（适配 CF D1）</title>
+    <!-- 引入Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // 自定义Tailwind主题配置：扩展颜色变量（适配Facebook风格的配色）
+        // 自定义Tailwind主题配置
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'fb-blue': '#1877F2',       // Facebook主蓝
-                        'fb-blue-dark': '#166FE5',  // 深色版Facebook蓝
-                        'fb-bg': '#F0F2F5',         // Facebook背景灰
-                        'fb-gray': '#65676B',       // Facebook文本灰
-                        'fb-gray-light': '#E4E6EB', // Facebook浅灰（边框用）
+                        'fb-blue': '#1877F2',
+                        'fb-blue-dark': '#166FE5',
+                        'fb-bg': '#F0F2F5',
+                        'fb-gray': '#65676B',
+                        'fb-gray-light': '#E4E6EB',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* 定义背景渐变动画的速度变量 */
         :root { --bg-speed: 20s; }
         body {
-            /* 字体：适配不同系统的无衬线字体 */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            /* 渐变背景：5种颜色组成的-45度渐变 */
             background: linear-gradient(-45deg, #4a6d7c, #8da383, #8a6a9c, #d18a66, #147a61);
-            background-size: 400% 400%; /* 背景尺寸放大，用于动画位移 */
-            /* 渐变动画：var(--bg-speed)秒无限循环，ease缓动 */
+            background-size: 400% 400%;
             animation: gradientBG var(--bg-speed) ease infinite;
-            background-attachment: fixed; /* 背景固定，滚动页面不移动 */
-            min-height: 100vh; /* 最小高度占满视口 */
+            background-attachment: fixed;
+            min-height: 100vh;
         }
 
-        /* 背景渐变动画关键帧：修改背景位置实现渐变流动效果 */
         @keyframes gradientBG { 
-            0% { background-position: 0% 50%; }   /* 初始位置 */
-            50% { background-position: 100% 50%; }/* 中间位置（右移） */
-            100% { background-position: 0% 50%; } /* 回到初始位置 */
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        /* 毛玻璃卡片核心样式 */
         .glass-card {
-            background: rgba(235, 230, 230, 0.75); /* 半透明白色背景 */
-            backdrop-filter: blur(15px); /* 毛玻璃模糊效果（核心） */
-            border-radius: 12px; /* 圆角 */
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); /* 阴影增强层次感 */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* 细白边框增强玻璃感 */
+            background: rgba(235, 230, 230, 0.75);
+            backdrop-filter: blur(15px);
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* 留言列表项的毛玻璃样式（比卡片更浅） */
         .message-item {
             background: rgba(240, 242, 245, 0.85);
             backdrop-filter: blur(10px);
@@ -63,22 +56,20 @@
         }
     </style>
 </head>
-<body class="p-4 md:p-8"> <!-- 移动端内边距4，桌面端8 -->
-    <div class="max-w-4xl mx-auto"> <!-- 最大宽度4xl，水平居中 -->
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
         <!-- 标题区域 -->
-        <div class="text-center mb-6"> <!-- 文本居中，底部外边距6 -->
-            <h1 class="text-2xl md:text-2xl font-bold text-gray-100 mb-2 text-shadow">
-                在线留言板
+        <div class="text-center mb-6">
+            <h1 class="text-2xl md:text-2xl font-bold text-gray-100 mb-2">
+                在线留言板（CF D1 适配版）
             </h1>
             <p class="text-white/80 text-base md:text-gray">分享你的想法和反馈</p>
         </div>
 
-        <!-- 留言表单（毛玻璃卡片包裹） -->
-        <div class="glass-card p-6 md:p-8 mb-4"> <!-- 内边距：移动端6，桌面端8；底部外边距4 -->
-            <div id="notification"></div> <!-- 提交结果提示框（成功/失败） -->
-            <!-- 留言表单：space-y-4 表示子元素垂直间距4 -->
+        <!-- 留言表单 -->
+        <div class="glass-card p-6 md:p-8 mb-4">
+            <div id="notification"></div>
             <form id="messageForm" class="space-y-4">
-                <!-- 留言内容输入框 -->
                 <div>
                     <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
                         留言内容
@@ -86,15 +77,12 @@
                     <textarea
                         id="content"
                         name="content"
-                        required  <!-- 必填项 -->
-                        rows="4"   <!-- 默认4行 -->
+                        required
+                        rows="4"
                         placeholder="分享你的想法..."
-                        <!-- 样式：宽度100%，内边距3/2，边框用fb-gray-light，圆角lg，背景半透明fb-bg；
-                             聚焦时背景变白、外发光fb-blue、边框透明，过渡动画，禁止缩放 -->
                         class="w-full px-3 py-2 border border-fb-gray-light rounded-lg bg-fb-bg/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-fb-blue focus:border-transparent transition-all resize-none"
                     ></textarea>
                 </div>
-                <!-- 邮箱输入框 -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
                         邮箱地址
@@ -103,17 +91,13 @@
                         type="email"
                         id="email"
                         name="email"
-                        required  <!-- 必填项 -->
+                        required
                         placeholder="your@email.com"
-                        <!-- 样式：与文本框一致，适配输入框形态 -->
                         class="w-full px-3 py-2 border border-fb-gray-light rounded-lg bg-fb-bg/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-fb-blue focus:border-transparent transition-all"
                     >
                 </div>
-                <!-- 提交按钮 -->
                 <button
                     type="submit"
-                    <!-- 样式：宽度100%，祖母绿底色，hover加深，白色文字，圆角；
-                         disabled时透明度60%，禁止点击 -->
                     class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     发送留言
@@ -121,55 +105,47 @@
             </form>
         </div>
 
-        <!-- 历史留言列表（毛玻璃卡片包裹） -->
+        <!-- 历史留言列表 -->
         <div class="glass-card p-6 md:p-8">
             <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-4">
-                所有留言
+                所有留言（与 D1 数据库时间同步）
             </h2>
             <div id="messagesList">
-                <!-- 初始加载提示 -->
                 <div class="text-center text-fb-gray py-8">加载中...</div>
             </div>
         </div>
     </div>
 
     <script>
-        // API基础地址（需后端配合，实际部署时替换为真实接口地址）
+        // API基础地址（适配 CF Worker/Pages 接口，无需修改）
         const API_URL = '/api';
 
         /**
-         * 加载历史留言列表
-         * 逻辑：调用GET /api/messages接口，渲染留言列表
+         * 加载历史留言列表（适配 CF D1 返回格式）
          */
         async function loadMessages() {
             try {
-                // 发起GET请求获取留言列表
                 const response = await fetch(`${API_URL}/messages`);
-                const data = await response.json(); // 解析响应
+                const data = await response.json();
 
                 const messagesList = document.getElementById('messagesList');
-
-                // 无留言时显示提示
                 if (!data.messages || data.messages.length === 0) {
                     messagesList.innerHTML = '<div class="text-center text-fb-gray py-12 text-sm">暂无留言，成为第一个留言的人吧！</div>';
                     return;
                 }
 
-                // 有留言时，遍历渲染每条留言（message-item样式包裹）
+                // 渲染留言（调用适配 CF D1 的时间格式化函数）
                 messagesList.innerHTML = data.messages.map(msg => `
                     <div class="message-item p-4 mb-3">
-                        <!-- 留言内容（转义HTML防止XSS攻击） -->
                         <div class="text-gray-900 text-base mb-2 leading-relaxed">${escapeHtml(msg.content)}</div>
-                        <!-- 邮箱 + 时间（调用修改后的formatDate函数，修正UTC-8偏差） -->
                         <div class="flex flex-wrap items-center gap-2 text-xs text-fb-gray">
                             <span class="font-medium">${escapeHtml(msg.email)}</span>
                             <span>·</span>
-                            <span>${formatDate(msg.created_at)}</span>
+                            <span>${formatD1Date(msg.created_at)}</span>
                         </div>
                     </div>
-                `).join(''); // 数组转字符串插入DOM
+                `).join('');
             } catch (error) {
-                // 加载失败时捕获错误，提示用户
                 console.error('加载留言失败:', error);
                 document.getElementById('messagesList').innerHTML =
                     '<div class="bg-red-50/80 text-red-600 p-3 rounded-lg text-sm">加载留言失败，请刷新页面重试</div>';
@@ -177,108 +153,89 @@
         }
 
         /**
-         * 提交留言表单的事件监听
-         * 逻辑：阻止默认提交 → 禁用按钮 → 发起POST请求 → 处理响应/错误 → 刷新列表
+         * 提交留言表单监听
          */
         document.getElementById('messageForm').addEventListener('submit', async (e) => {
-            e.preventDefault(); // 阻止表单默认提交（避免页面刷新）
-
-            // 获取关键元素
+            e.preventDefault();
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const notification = document.getElementById('notification');
-            const content = document.getElementById('content').value; // 留言内容
-            const email = document.getElementById('email').value;     // 邮箱
+            const content = document.getElementById('content').value;
+            const email = document.getElementById('email').value;
 
-            // 禁用按钮防重复提交
             submitBtn.disabled = true;
             submitBtn.textContent = '发送中...';
-            notification.innerHTML = ''; // 清空之前的提示
+            notification.innerHTML = '';
 
             try {
-                // 发起POST请求提交留言
                 const response = await fetch(`${API_URL}/messages`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', // 声明JSON格式
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ content, email }) // 序列化参数
+                    body: JSON.stringify({ content, email })
                 });
 
-                const data = await response.json(); // 解析响应
-
-                // 响应成功（HTTP 200）
+                const data = await response.json();
                 if (response.ok) {
                     notification.innerHTML = '<div class="bg-green-50/80 text-green-700 p-3 rounded-lg mb-4 text-sm font-medium">留言发送成功！</div>';
-                    document.getElementById('messageForm').reset(); // 重置表单
-                    await loadMessages(); // 刷新留言列表
-                    // 3秒后清空成功提示
+                    document.getElementById('messageForm').reset();
+                    await loadMessages();
                     setTimeout(() => {
                         notification.innerHTML = '';
                     }, 3000);
                 } else {
-                    // 业务失败（如参数错误）
                     notification.innerHTML = `<div class="bg-red-50/80 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium">${data.error || '发送失败，请重试'}</div>`;
                 }
             } catch (error) {
-                // 网络错误/请求异常
                 console.error('发送留言失败:', error);
                 notification.innerHTML = '<div class="bg-red-50/80 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium">发送失败，请检查网络连接</div>';
             } finally {
-                // 无论成功/失败，恢复按钮状态
                 submitBtn.disabled = false;
                 submitBtn.textContent = '发送留言';
             }
         });
 
         /**
-         * HTML转义函数（防止XSS攻击）
-         * @param {string} text - 原始文本
-         * @returns {string} 转义后的文本
+         * HTML转义函数（防止XSS）
          */
         function escapeHtml(text) {
             const div = document.createElement('div');
-            div.textContent = text; // 利用textContent自动转义HTML标签
+            div.textContent = text;
             return div.innerHTML;
         }
 
         /**
-         * 【核心修改】日期格式化函数（修正UTC-8偏差，与服务器时间一致）
-         * 1. 手动指定服务器时区偏移（默认东八区GMT+8，可根据服务器实际时区修改）
-         * 2. 忽略前端UTC-8时区，强制计算服务器时区时间
-         * 3. 保留补零逻辑，格式统一为YYYY-MM-DD HH:MM:SS
-         * @param {string} dateString - 后端返回的时间字符串（UTC格式/本地格式）
-         * @returns {string} 格式化后的服务器时区时间
+         * 【核心适配】CF D1 日期格式化函数（与 D1 数据库时间完全同步）
+         * 针对 CF 返回的 ISO 8601 格式 UTC 时间（D1 控制台显示格式），直接提取原始字段，不做时区转换
+         * @param {string} dateString - CF 从 D1 读取并返回的时间字符串（如 2025-12-30T16:00:00.000Z 或 2025-12-30 16:00:00）
+         * @returns {string} 格式化后的时间（与 D1 控制台显示一致，无跳天问题）
          */
-        function formatDate(dateString) {
-            // 1. 解析时间字符串，获取时间戳（不受时区影响，精准唯一）
-            const date = new Date(dateString);
-            const timestamp = date.getTime(); // 获取毫秒级时间戳
+        function formatD1Date(dateString) {
+            // 情况1：匹配 CF 返回的 D1 标准 ISO 格式（带 T 和 Z，如 2025-12-30T16:00:00.000Z）
+            const d1IsoReg = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?Z?$/;
+            const isoMatch = dateString.match(d1IsoReg);
+            
+            if (isoMatch) {
+                const [, year, month, day, hours, minutes, seconds] = isoMatch;
+                // 直接拼接原始 UTC 字段，与 D1 控制台显示完全一致
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
 
-            // 2. 手动设置服务器时区偏移（关键：修正UTC-8偏差）
-            // 服务器时区：东八区（GMT+8），偏移量为 8 * 60 * 60 * 1000 = 28800000 毫秒
-            // 若服务器为其他时区，修改此处offset即可（如GMT+9：9*3600*1000）
-            const serverTimezoneOffset = 8 * 60 * 60 * 1000; // 东八区偏移量
+            // 情况2：匹配 CF 返回的 D1 本地格式（不带 T 和 Z，如 2025-12-30 16:00:00）
+            const d1LocalReg = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/;
+            const localMatch = dateString.match(d1LocalReg);
+            
+            if (localMatch) {
+                const [, year, month, day, hours, minutes, seconds] = localMatch;
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
 
-            // 3. 计算服务器时区的时间戳（时间戳 + 服务器时区偏移 - UTC偏移）
-            // date.getTimezoneOffset()：返回当前环境时区与UTC的差值（分钟），转为毫秒
-            const localTimezoneOffset = date.getTimezoneOffset() * 60 * 1000;
-            const serverTimestamp = timestamp + serverTimezoneOffset - localTimezoneOffset;
-
-            // 4. 根据服务器时间戳创建新的Date对象
-            const serverDate = new Date(serverTimestamp);
-
-            // 5. 补零格式化，拼接为最终时间字符串
-            const year = serverDate.getFullYear();
-            const month = String(serverDate.getMonth() + 1).padStart(2, '0'); // 月份补零
-            const day = String(serverDate.getDate()).padStart(2, '0'); // 日期补零（解决30号显示31号问题）
-            const hours = String(serverDate.getHours()).padStart(2, '0'); // 小时补零
-            const minutes = String(serverDate.getMinutes()).padStart(2, '0'); // 分钟补零
-            const seconds = String(serverDate.getSeconds()).padStart(2, '0'); // 秒补零
-
-            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            // 降级处理：兼容异常格式，确保不报错
+            const fallbackDate = new Date(dateString);
+            return `${fallbackDate.getUTCFullYear()}-${String(fallbackDate.getUTCMonth() + 1).padStart(2, '0')}-${String(fallbackDate.getUTCDate()).padStart(2, '0')} ${String(fallbackDate.getUTCHours()).padStart(2, '0')}:${String(fallbackDate.getUTCMinutes()).padStart(2, '0')}:${String(fallbackDate.getUTCSeconds()).padStart(2, '0')}`;
         }
 
-        // 页面加载完成后，自动加载留言列表
+        // 页面加载完成后加载留言
         loadMessages();
     </script>
 </body>
