@@ -2,386 +2,272 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>打印工具</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22>🖨️</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线留言板</title>
+    <!-- 引入Tailwind CSS CDN，用于快速构建样式 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 自定义Tailwind主题配置：扩展颜色变量（适配Facebook风格的配色）
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fb-blue': '#1877F2',       // Facebook主蓝
+                        'fb-blue-dark': '#166FE5',  // 深色版Facebook蓝
+                        'fb-bg': '#F0F2F5',         // Facebook背景灰
+                        'fb-gray': '#65676B',       // Facebook文本灰
+                        'fb-gray-light': '#E4E6EB', // Facebook浅灰（边框用）
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* 定义背景渐变动画的速度变量 */
         :root { --bg-speed: 20s; }
-
         body {
+            /* 字体：适配不同系统的无衬线字体 */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            /* 渐变背景：5种颜色组成的-45度渐变 */
             background: linear-gradient(-45deg, #4a6d7c, #8da383, #8a6a9c, #d18a66, #147a61);
-            background-size: 400% 400%;
+            background-size: 400% 400%; /* 背景尺寸放大，用于动画位移 */
+            /* 渐变动画：var(--bg-speed)秒无限循环，ease缓动 */
             animation: gradientBG var(--bg-speed) ease infinite;
-            background-attachment: fixed;
-            min-height: 100vh; 
-            padding: 12px 20px 20px 20px; 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: all 0.1s ease;
+            background-attachment: fixed; /* 背景固定，滚动页面不移动 */
+            min-height: 100vh; /* 最小高度占满视口 */
         }
 
+        /* 背景渐变动画关键帧：修改背景位置实现渐变流动效果 */
         @keyframes gradientBG { 
-            0% { background-position: 0% 50%; } 
-            50% { background-position: 100% 50%; } 
-            100% { background-position: 0% 50%; } 
+            0% { background-position: 0% 50%; }   /* 初始位置 */
+            50% { background-position: 100% 50%; }/* 中间位置（右移） */
+            100% { background-position: 0% 50%; } /* 回到初始位置 */
         }
 
-        .tools-container {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            padding: 20px;
+        /* 毛玻璃卡片核心样式 */
+        .glass-card {
+            background: rgba(235, 230, 230, 0.75); /* 半透明白色背景 */
+            backdrop-filter: blur(15px); /* 毛玻璃模糊效果（核心） */
+            border-radius: 12px; /* 圆角 */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); /* 阴影增强层次感 */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* 细白边框增强玻璃感 */
         }
 
-        .tool-card {
-            width: 280px;
-            height: 280px;
-            background: rgba(235, 230, 230, 0.75); 
-            backdrop-filter: blur(15px); 
+        /* 留言列表项的毛玻璃样式（比卡片更浅） */
+        .message-item {
+            background: rgba(240, 242, 245, 0.85);
+            backdrop-filter: blur(10px);
             border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .tool-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 45px rgba(0,0,0,0.25);
-            background: rgba(245, 240, 240, 0.85);
-        }
-
-        .header { 
-            text-align: center;
-            margin-bottom: 50px;
-            width: 100%;
-        }
-        
-        .header h1 { 
-            color: #2c3e50; 
-            font-size: 32px; 
-            letter-spacing: 2px; 
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .tool-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(74, 109, 124, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            margin-bottom: 25px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .tool-card:hover .tool-icon {
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(1.05);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
-            border-color: #147a61;
-        }
-
-        .tool-title {
-            color: #2c3e50;
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-            transition: color 0.2s ease;
-        }
-
-        .tool-card:hover .tool-title {
-            color: #147a61;
-        }
-
-        .tool-desc {
-            color: #576574;
-            font-size: 15px;
-            line-height: 1.5;
-            max-width: 220px;
-        }
-
-        .tool-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .browser-warning {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: #ffcc00;
-            color: #333;
-            padding: 10px 15px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 9999;
-            display: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .browser-warning-content {
-            max-width: 1050px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .browser-warning-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #333;
-            padding: 0 10px;
-        }
-
-        @media (max-width: 768px) {
-            .tools-container {
-                gap: 30px;
-                padding: 15px;
-            }
-            
-            .tool-card {
-                width: 260px;
-                height: 260px;
-                padding: 25px;
-            }
-            
-            .header {
-                margin-bottom: 40px;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-            
-            .tool-title {
-                font-size: 22px;
-            }
-            
-            .tool-desc {
-                font-size: 14px;
-                max-width: 200px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .tools-container {
-                flex-direction: column;
-                gap: 30px;
-            }
-            
-            .tool-card {
-                width: 280px;
-                height: 280px;
-            }
-            
-            .header h1 {
-                font-size: 26px;
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .tools-container {
-                padding: 10px;
-            }
-            
-            .header {
-                margin-bottom: 30px;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
-            
-            .tool-card {
-                width: 260px;
-                height: 260px;
-                padding: 20px;
-            }
-            
-            .tool-icon {
-                width: 70px;
-                height: 70px;
-                font-size: 32px;
-                margin-bottom: 20px;
-            }
-            
-            .tool-title {
-                font-size: 20px;
-                margin-bottom: 10px;
-            }
-            
-            .tool-desc {
-                font-size: 13px;
-                max-width: 180px;
-            }
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-<body>
-    <div class="browser-warning" id="browserWarning">
-        <div class="browser-warning-content">
-            <div>⚠️ 您的浏览器可能不完全支持所有功能，建议使用 Chrome、Edge 或 Firefox 最新版本</div>
-            <button class="browser-warning-close" onclick="closeBrowserWarning()">×</button>
+<body class="p-4 md:p-8"> <!-- 移动端内边距4，桌面端8 -->
+    <div class="max-w-4xl mx-auto"> <!-- 最大宽度4xl，水平居中 -->
+        <!-- 标题区域 -->
+        <div class="text-center mb-6"> <!-- 文本居中，底部外边距6 -->
+            <h1 class="text-2xl md:text-2xl font-bold text-gray-100 mb-2 text-shadow">
+                在线留言板
+            </h1>
+            <p class="text-white/80 text-base md:text-gray">分享你的想法和反馈</p>
         </div>
-    </div>
-    
-    <div class="header">
-		<h1>😮  😉  😆  🤣  🤗  🙈  🤔  🤷</h1>
-    </div>
-    
-    <div class="tools-container">
-        <a href="#" class="tool-link" id="invoiceToolLink">
-            <div class="tool-card">
-                <div class="tool-icon">🧾</div>
-                <div class="tool-title">发票打印</div>
-                <div class="tool-desc">简洁高效的发票排版打印工具，支持快速生成和打印</div>
+
+        <!-- 留言表单（毛玻璃卡片包裹） -->
+        <div class="glass-card p-6 md:p-8 mb-4"> <!-- 内边距：移动端6，桌面端8；底部外边距4 -->
+            <div id="notification"></div> <!-- 提交结果提示框（成功/失败） -->
+            <!-- 留言表单：space-y-4 表示子元素垂直间距4 -->
+            <form id="messageForm" class="space-y-4">
+                <!-- 留言内容输入框 -->
+                <div>
+                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
+                        留言内容
+                    </label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        required  <!-- 必填项 -->
+                        rows="4"   <!-- 默认4行 -->
+                        placeholder="分享你的想法..."
+                        <!-- 样式：宽度100%，内边距3/2，边框用fb-gray-light，圆角lg，背景半透明fb-bg；
+                             聚焦时背景变白、外发光fb-blue、边框透明，过渡动画，禁止缩放 -->
+                        class="w-full px-3 py-2 border border-fb-gray-light rounded-lg bg-fb-bg/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-fb-blue focus:border-transparent transition-all resize-none"
+                    ></textarea>
+                </div>
+                <!-- 邮箱输入框 -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        邮箱地址
+                    </label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        required  <!-- 必填项 -->
+                        placeholder="your@email.com"
+                        <!-- 样式：与文本框一致，适配输入框形态 -->
+                        class="w-full px-3 py-2 border border-fb-gray-light rounded-lg bg-fb-bg/80 focus:bg-white focus:outline-none focus:ring-2 focus:ring-fb-blue focus:border-transparent transition-all"
+                    >
+                </div>
+                <!-- 提交按钮 -->
+                <button
+                    type="submit"
+                    <!-- 样式：宽度100%，祖母绿底色，hover加深，白色文字，圆角；
+                         disabled时透明度60%，禁止点击 -->
+                    class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                    发送留言
+                </button>
+            </form>
+        </div>
+
+        <!-- 历史留言列表（毛玻璃卡片包裹） -->
+        <div class="glass-card p-6 md:p-8">
+            <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-4">
+                所有留言
+            </h2>
+            <div id="messagesList">
+                <!-- 初始加载提示 -->
+                <div class="text-center text-fb-gray py-8">加载中...</div>
             </div>
-        </a>
-        
-        <a href="#" class="tool-link" id="photoToolLink">
-            <div class="tool-card">
-                <div class="tool-icon">🖼️</div>
-                <div class="tool-title">手机截图打印</div>
-                <div class="tool-desc">批量智能排版助手，支持两种布局和裁剪线</div>
-            </div>
-        </a>
-		 <div class="header">
-		<h3 style="font-size: 18px; color: #ffffff;">✨仅仅只为了粘贴发票和凭证方便，其它可能并不适用</h3>
-    </div>
+        </div>
     </div>
 
     <script>
-        function checkBrowserCompatibility() {
-            const missingAPIs = [];
-            
-            if (!window.File) missingAPIs.push('File API');
-            if (!window.FileReader) missingAPIs.push('FileReader API');
-            
-            if (missingAPIs.length > 0) {
-                console.warn('浏览器不支持以下必要API:', missingAPIs.join(', '));
-                document.getElementById('browserWarning').style.display = 'block';
-                return false;
-            }
-            
-            return true;
-        }
-        
-        function closeBrowserWarning() {
-            document.getElementById('browserWarning').style.display = 'none';
-        }
+        // API基础地址（需后端配合，实际部署时替换为真实接口地址）
+        const API_URL = '/api';
 
-        function setupToolLinks() {
+        /**
+         * 加载历史留言列表
+         * 逻辑：调用GET /api/messages接口，渲染留言列表
+         */
+        async function loadMessages() {
             try {
-                const invoiceToolUrl = "https://888.topmer.top/fp";
-                const photoToolUrl = "https://888.topmer.top/jt";
-                
-                const invoiceLink = document.getElementById('invoiceToolLink');
-                const photoLink = document.getElementById('photoToolLink');
-                
-                if (invoiceLink) {
-                    invoiceLink.href = invoiceToolUrl;
-                    invoiceLink.addEventListener('click', function(e) {
-                        if (invoiceToolUrl === "#") {
-                            e.preventDefault();
-                            alert('发票打印工具链接尚未配置，请在代码中设置实际URL');
-                        }
-                    });
+                // 发起GET请求获取留言列表
+                const response = await fetch(`${API_URL}/messages`);
+                const data = await response.json(); // 解析响应
+
+                const messagesList = document.getElementById('messagesList');
+
+                // 无留言时显示提示
+                if (!data.messages || data.messages.length === 0) {
+                    messagesList.innerHTML = '<div class="text-center text-fb-gray py-12 text-sm">暂无留言，成为第一个留言的人吧！</div>';
+                    return;
                 }
-                
-                if (photoLink) {
-                    photoLink.href = photoToolUrl;
-                    photoLink.addEventListener('click', function(e) {
-                        if (photoToolUrl === "#") {
-                            e.preventDefault();
-                            alert('照片排版工具链接尚未配置，请在代码中设置实际URL');
-                        }
-                    });
-                }
-                
+
+                // 有留言时，遍历渲染每条留言（message-item样式包裹）
+                messagesList.innerHTML = data.messages.map(msg => `
+                    <div class="message-item p-4 mb-3">
+                        <!-- 留言内容（转义HTML防止XSS） -->
+                        <div class="text-gray-900 text-base mb-2 leading-relaxed">${escapeHtml(msg.content)}</div>
+                        <!-- 邮箱 + 时间（调用修改后的formatDate函数，保证与服务器时间一致） -->
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-fb-gray">
+                            <span class="font-medium">${escapeHtml(msg.email)}</span>
+                            <span>·</span>
+                            <span>${formatDate(msg.created_at)}</span>
+                        </div>
+                    </div>
+                `).join(''); // 数组转字符串插入DOM
             } catch (error) {
-                console.error('设置工具链接时出错:', error);
+                // 加载失败时捕获错误，提示用户
+                console.error('加载留言失败:', error);
+                document.getElementById('messagesList').innerHTML =
+                    '<div class="bg-red-50/80 text-red-600 p-3 rounded-lg text-sm">加载留言失败，请刷新页面重试</div>';
             }
         }
 
-        function enhanceCardClick() {
-            const cards = document.querySelectorAll('.tool-card');
-            
-            cards.forEach(card => {
-                card.addEventListener('mousedown', function() {
-                    this.style.transform = 'translateY(-4px) scale(0.98)';
-                });
-                
-                card.addEventListener('mouseup', function() {
-                    this.style.transform = 'translateY(-8px)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        }
+        /**
+         * 提交留言表单的事件监听
+         * 逻辑：阻止默认提交 → 禁用按钮 → 发起POST请求 → 处理响应/错误 → 刷新列表
+         */
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // 阻止表单默认提交（避免页面刷新）
 
-        function setupEscapeKey() {
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeBrowserWarning();
-                }
-            });
-        }
+            // 获取关键元素
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('content').value; // 留言内容
+            const email = document.getElementById('email').value;     // 邮箱
 
-        document.addEventListener('DOMContentLoaded', function() {
+            // 禁用按钮防重复提交
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发送中...';
+            notification.innerHTML = ''; // 清空之前的提示
+
             try {
-                checkBrowserCompatibility();
+                // 发起POST请求提交留言
+                const response = await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // 声明JSON格式
+                    },
+                    body: JSON.stringify({ content, email }) // 序列化参数
+                });
+
+                const data = await response.json(); // 解析响应
+
+                // 响应成功（HTTP 200）
+                if (response.ok) {
+                    notification.innerHTML = '<div class="bg-green-50/80 text-green-700 p-3 rounded-lg mb-4 text-sm font-medium">留言发送成功！</div>';
+                    document.getElementById('messageForm').reset(); // 重置表单
+                    await loadMessages(); // 刷新留言列表
+                    // 3秒后清空成功提示
+                    setTimeout(() => {
+                        notification.innerHTML = '';
+                    }, 3000);
+                } else {
+                    // 业务失败（如参数错误）
+                    notification.innerHTML = `<div class="bg-red-50/80 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium">${data.error || '发送失败，请重试'}</div>`;
+                }
             } catch (error) {
-                console.error('检查浏览器兼容性时出错:', error);
+                // 网络错误/请求异常
+                console.error('发送留言失败:', error);
+                notification.innerHTML = '<div class="bg-red-50/80 text-red-600 p-3 rounded-lg mb-4 text-sm font-medium">发送失败，请检查网络连接</div>';
+            } finally {
+                // 无论成功/失败，恢复按钮状态
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发送留言';
             }
-            
-            setupToolLinks();
-            setupEscapeKey();
-            enhanceCardClick();
-            
-            window.addEventListener('error', function(event) {
-                console.error('全局错误捕获:', event.error);
-            });
-            
-            window.addEventListener('unhandledrejection', function(event) {
-                console.error('未处理的Promise拒绝:', event.reason);
-                event.preventDefault();
-            });
         });
+
+        /**
+         * HTML转义函数（防止XSS攻击）
+         * @param {string} text - 原始文本
+         * @returns {string} 转义后的文本
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text; // 利用textContent自动转义HTML标签
+            return div.innerHTML;
+        }
+
+        /**
+         * 【核心修改】日期格式化函数（保证与服务器时间一致）
+         * 解决UTC时间转换偏差，精准匹配服务器端数据库时间
+         * @param {string} dateString - 后端返回的时间字符串（支持UTC格式/本地格式）
+         * @returns {string} 格式化后的时间（YYYY-MM-DD HH:MM:SS），与服务器时间完全一致
+         */
+        function formatDate(dateString) {
+            const date = new Date(dateString); // 解析后端返回的时间字符串
+            
+            // 方案：直接获取「服务器对应时区」的时间组件（此处适配服务器本地时区，消除UTC转换偏差）
+            // 关键：若后端返回带Z的UTC时间，该方法会自动修正为与服务器一致的本地时间
+            const year = date.getFullYear();
+            // 月份：0开始，+1后补零（保证两位显示）
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            // 日期：补零（核心：解决30号显示31号的时区偏差问题）
+            const day = String(date.getDate()).padStart(2, '0');
+            // 时分秒：补零，保证格式统一
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            // 拼接为与服务器一致的时间格式
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // 页面加载完成后，自动加载留言列表
+        loadMessages();
     </script>
 </body>
 </html>
