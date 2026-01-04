@@ -6,52 +6,43 @@
     <title>打印工具</title>
     <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22&gt;%F0%9F%96%A8%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
     <style>
-        /* 全局CSS变量：统一管理样式，方便后续修改（仅修改圆角、阴影参数） */
         :root {
-            --bg-speed: 20s; /* 保留原有核心值 */
-            --primary-color: #147a61; /* 保留原有核心值 */
+            --bg-speed: 20s;
+            --primary-color: #147a61;
             --text-dark: #2c3e50;
             --text-gray: #576574;
             --text-white: #ffffff;
             --card-bg-default: rgba(235, 230, 230, 0.75);
             --card-bg-hover: rgba(245, 240, 240, 0.85);
             --card-bg-pressed: rgba(230, 225, 225, 0.8);
-            /* 优化：调整卡片圆角与阴影细腻度 */
-            --border-radius: 16px; /* 从12px改为16px，更柔和 */
+            --border-radius: 16px;
             --card-shadow-default: 0 12px 30px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
             --card-shadow-hover: 0 20px 40px rgba(0,0,0,0.2);
             --card-shadow-pressed: 0 16px 32px rgba(0,0,0,0.18);
             --spacing-large: 50px;
-            --spacing-large-sm: 30px; /* 小屏端大间距 */
+            --spacing-large-sm: 30px;
             --spacing-medium: 20px;
         }
 
-        /* 新增：提取公共样式为组件化类名（增量扩展，不修改原有样式） */
         .flex-center {
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .text-shadow {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+
         .card-effect {
             border-radius: var(--border-radius);
             box-shadow: var(--card-shadow-default);
             transition: all 0.3s ease;
         }
 
-        /* 全局重置（保留核心代码，无修改） */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* 核心背景与布局：保留核心，新增明暗变化+兼容性优化 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            /* 优化：毛玻璃兼容性兜底，先写纯色渐变降级，再写现代毛玻璃背景 */
-            background: #4A7856; /* 兜底纯色 */
+            background: #4A7856;
             background: linear-gradient(-45deg, #9ac47a, #A3B18A, #D9AD98, #A5A5C1, #C9B380);
             background-size: 400% 400%;
-            /* 保留核心动画，优化：增加轻微明暗变化 */
             animation: gradientBG var(--bg-speed) ease-in-out infinite;
             background-attachment: fixed;
             min-height: 100vh;
@@ -62,64 +53,43 @@
             align-items: center;
         }
 
-        /* 动态渐变动画：保留核心，优化：增加轻微明暗变化提升层次感 */
         @keyframes gradientBG {
             0% { background-position: 0% 50%; opacity: 0.98; }
             50% { background-position: 100% 50%; opacity: 1; }
             100% { background-position: 0% 50%; opacity: 0.98; }
         }
 
-        /* 头部样式：保留核心，新增文字抗锯齿优化 */
         .header {
             text-align: center;
             margin-bottom: var(--spacing-large);
             width: 100%;
         }
-        .header h1 {
-            color: var(--text-dark);
-            font-size: 32px;
-            letter-spacing: 2px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            /* 新增：文字抗锯齿优化 */
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-        }
+
         .header h3 {
             font-size: 18px;
             color: var(--text-white);
             margin-top: 10px;
             text-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            /* 新增：文字抗锯齿优化 */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
         }
 
-        /* 工具容器：优化：替换为网格布局，预留扩展接口（不破坏核心布局逻辑） */
         .tools-container {
-            /* 替换为网格布局，适配多卡片扩展，保留原有间距、内边距核心值 */
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 40px;
-            max-width: 1200px; /* 限制最大宽度，避免大屏端卡片过宽 */
+            max-width: 1200px;
             padding: var(--spacing-medium);
-            justify-items: center; /* 保留居中效果，与原有核心逻辑一致 */
+            justify-items: center;
         }
 
-        /* 核心卡片样式：保留核心交互，优化毛玻璃兼容性+新增文字抗锯齿 */
         .tool-card {
             width: 280px;
             height: 280px;
-            /* 优化：毛玻璃兼容性降级，先写纯色渐变，再写毛玻璃 */
             background: linear-gradient(rgba(235, 230, 230, 0.9), rgba(235, 230, 230, 0.8));
             backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px); /* 兼容Safari */
+            -webkit-backdrop-filter: blur(15px);
             border-radius: var(--border-radius);
             display: flex;
             flex-direction: column;
@@ -132,28 +102,26 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
             position: relative;
-            /* 新增：文字抗锯齿优化（继承给子元素） */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
         }
-        /* 卡片hover样式：保留核心，优化毛玻璃兼容性 */
+
         .tool-card:hover {
             transform: translateY(-8px);
             box-shadow: var(--card-shadow-hover);
-            /* 优化：毛玻璃兼容性降级 */
             background: linear-gradient(rgba(245, 240, 240, 0.95), rgba(245, 240, 240, 0.85));
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
         }
-        /* 卡片按压样式：保留核心，仅调整阴影参数（已通过CSS变量修改） */
+
         .tool-card.pressed {
             transform: translateY(-4px) scale(0.98);
             background: var(--card-bg-pressed);
             box-shadow: var(--card-shadow-pressed);
             transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
         }
-        /* 卡片跳转箭头提示：保留核心，无修改 */
+
         .tool-card::after {
             content: "→";
             position: absolute;
@@ -169,7 +137,6 @@
             color: var(--primary-color);
         }
 
-        /* 卡片内元素：保留核心，新增文字抗锯齿优化 */
         .tool-icon {
             width: 80px;
             height: 80px;
@@ -184,12 +151,14 @@
             transition: all 0.2s ease;
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
+
         .tool-card:hover .tool-icon {
             background: rgba(255, 255, 255, 0.5);
             transform: scale(1.05);
             box-shadow: 0 12px 25px rgba(0,0,0,0.2), 0 0 15px rgba(20, 122, 97, 0.2);
             border-color: var(--primary-color);
         }
+
         .tool-title {
             color: var(--text-dark);
             font-size: 24px;
@@ -197,73 +166,43 @@
             margin-bottom: 12px;
             letter-spacing: 1px;
             transition: color 0.2s ease;
-            /* 新增：文字抗锯齿优化 */
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-        }
-        .tool-card:hover .tool-title {
-            color: var(--primary-color);
-            text-shadow: 0 0 10px rgba(20, 122, 97, 0.3);
-        }
-        .tool-desc {
-            color: var(--text-gray);
-            font-size: 15px;
-            line-height: 1.5;
-            max-width: 220px;
-            /* 新增：文字抗锯齿优化 */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
         }
 
-        /* 链接样式：保留核心，无修改 */
+        .tool-card:hover .tool-title {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px rgba(20, 122, 97, 0.3);
+        }
+
+        .tool-desc {
+            color: var(--text-gray);
+            font-size: 15px;
+            line-height: 1.5;
+            max-width: 220px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
         .tool-link {
             text-decoration: none;
             color: inherit;
             display: block;
         }
 
-        /* 新增：轻量无干扰跳转提示框样式（增量扩展） */
-        .jump-tip {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            /* 优化：毛玻璃兼容性兜底 */
-            background: linear-gradient(rgba(235, 230, 230, 0.95), rgba(235, 230, 230, 0.85));
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            padding: 16px 24px;
-            color: var(--text-dark);
-            box-shadow: var(--card-shadow-hover);
-            font-size: 15px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 999;
-            /* 新增：文字抗锯齿优化 */
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-        }
-        .jump-tip.show {
-            opacity: 1;
-        }
-
-        /* 响应式适配：保留核心，无修改（仅依赖CSS变量调整，不改动逻辑） */
         @media (max-width: 768px) {
             .tools-container { gap: 30px; padding: 15px; }
             .tool-card { width: 260px; height: 260px; padding: 25px; }
-            .header h1 { font-size: 28px; }
             .tool-title { font-size: 22px; }
             .tool-desc { font-size: 14px; max-width: 200px; }
         }
+
         @media (max-width: 600px) {
-            .tools-container { grid-template-columns: 1fr; } /* 网格布局适配小屏，保留垂直排列逻辑 */
-            .header h1 { font-size: 26px; flex-direction: column; gap: 10px; }
+            .tools-container { grid-template-columns: 1fr; }
         }
+
         @media (max-width: 480px) {
             body { padding: 10px; }
             .header { margin-bottom: var(--spacing-large-sm); }
@@ -276,25 +215,23 @@
     </style>
 </head>
 <body>
-    <!-- 头部：保留核心内容，无修改 -->
     <div class="header">
         <h3>✨仅仅只为了粘贴发票和凭证方便，其它可能并不适用</h3>
     </div>
 
-    <!-- 核心工具卡片：优化：添加外部链接新窗口打开属性（修改a标签属性，不破坏卡片结构） -->
     <div class="tools-container">
-        <a href="https://888.topmer.top/fp" class="tool-link" tabindex="0">
-            <div class="tool-card card-effect"> <!-- 新增：追加公共组件类名，不修改原有类名 -->
-                <div class="tool-icon flex-center"> <!-- 新增：追加公共组件类名，不修改原有类名 -->
+        <a href="https://888.topmer.top/fp/index.html" class="tool-link" tabindex="0">
+            <div class="tool-card card-effect">
+                <div class="tool-icon flex-center">
                     🧾
                 </div>
                 <div class="tool-title">发票打印</div>
                 <div class="tool-desc">简洁高效的发票排版打印工具，支持快速生成和打印</div>
             </div>
         </a>
-        <a href="https://888.topmer.top/jt" class="tool-link" tabindex="0">
-            <div class="tool-card card-effect"> <!-- 新增：追加公共组件类名，不修改原有类名 -->
-                <div class="tool-icon flex-center"> <!-- 新增：追加公共组件类名，不修改原有类名 -->
+        <a href="https://888.topmer.top/jt/index.html" class="tool-link" tabindex="0">
+            <div class="tool-card card-effect">
+                <div class="tool-icon flex-center">
                     🖼️
                 </div>
                 <div class="tool-title">手机截图打印</div>
@@ -303,12 +240,7 @@
         </a>
     </div>
 
-    <!-- 新增：轻量无干扰跳转提示框DOM（增量扩展，不破坏原有DOM结构） -->
-    <div class="jump-tip" id="jumpTip">正在跳转至工具页面，请稍候...</div>
-
-    <!-- 卡片交互逻辑：保留核心按压交互，修改跳转提示（移除alert，替换为自定义提示框） -->
     <script>
-        // 1. 卡片按压交互：保留原有核心逻辑，无修改（保证hover永久有效）
         document.querySelectorAll('.tool-card').forEach(card => {
             card.addEventListener('mousedown', () => {
                 card.classList.add('pressed');
@@ -318,24 +250,6 @@
             });
             card.addEventListener('mouseleave', () => {
                 card.classList.remove('pressed');
-            });
-        });
-
-        // 2. 跳转提示：移除alert，替换为轻量无干扰提示框（修改原有跳转逻辑，不破坏核心交互）
-        const jumpTip = document.getElementById('jumpTip');
-        document.querySelectorAll('.tool-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                // 保留：防止重复点击逻辑
-                link.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    link.style.pointerEvents = 'auto';
-                }, 1000);
-
-                // 替换：隐藏alert，显示自定义提示框
-                jumpTip.classList.add('show');
-                setTimeout(() => {
-                    jumpTip.classList.remove('show');
-                }, 2000);
             });
         });
     </script>
