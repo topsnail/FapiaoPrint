@@ -15,20 +15,15 @@ const AppState = {
     currentMargin: 2,
     showLines: true,
     isProcessing: false,
-    originalFileNames: [], // 保存原始文件名
     originalFiles: [] // 保存原始文件对象
 };
 
 const { jsPDF } = window.jspdf;
 
-// 设置pdf.js worker源
 pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/build/pdf.worker.mjs';
 
-// 浏览器兼容性检测
 function checkBrowserCompatibility() {
-    // 检测关键API是否支持
     const missingAPIs = [];
-    
     if (!window.File) missingAPIs.push('File API');
     if (!window.FileReader) missingAPIs.push('FileReader API');
     if (!window.Promise) missingAPIs.push('Promise API');
@@ -39,7 +34,6 @@ function checkBrowserCompatibility() {
         document.getElementById('browserWarning').style.display = 'block';
         return false;
     }
-    
     return true;
 }
 
@@ -47,34 +41,22 @@ function closeBrowserWarning() {
     document.getElementById('browserWarning').style.display = 'none';
 }
 
-// 使用说明弹窗功能
 function showHelp() {
-    try {
-        document.getElementById('helpDialog').style.display = 'flex';
-    } catch (error) {
-        console.error('显示帮助弹窗时出错:', error);
-    }
+    document.getElementById('helpDialog').style.display = 'flex';
 }
 
 function closeHelp() {
-    try {
-        document.getElementById('helpDialog').style.display = 'none';
-    } catch (error) {
-        console.error('关闭帮助弹窗时出错:', error);
-    }
+    document.getElementById('helpDialog').style.display = 'none';
 }
 
-// 文件列表更新函数
-function updateFileList(files) {
+function updateFileList() {
     try {
         const fileList = document.getElementById('fileList');
         const fileCount = document.getElementById('fileCount');
         
-        if (!fileList || !fileCount) {
-            console.warn('updateFileList: 文件列表元素不存在');
-            return;
-        }
+        if (!fileList || !fileCount) return;
         
+        const files = AppState.originalFiles;
         if (!files || files.length === 0) {
             fileList.innerHTML = '';
             fileCount.textContent = '0';
@@ -83,7 +65,6 @@ function updateFileList(files) {
         
         fileCount.textContent = files.length;
         
-        // 生成文件列表HTML，添加title属性用于悬停提示
         fileList.innerHTML = files.map((file, index) => {
             const displayName = file.name.length > 25 
                 ? file.name.substring(0, 22) + '...' 
@@ -95,6 +76,7 @@ function updateFileList(files) {
                         ${index + 1}. ${displayName}
                     </div>
                     <div class="file-status">✓ 已加载</div>
+                    <button class="file-remove-btn" data-index="${index}" title="移除此文件">×</button>
                 </div>
             `;
         }).join('');
@@ -103,55 +85,93 @@ function updateFileList(files) {
     }
 }
 
-async function handleFiles(files) {
-    // 新增：参数验证
-    if (!files || files.length === 0) {
-        console.error('handleFiles: 未接收到文件');
-        return;
+function removeFile(indexToRemove) {
+    try {
+        AppState.originalFiles.splice(indexToRemove, 1);
+        AppState.invoiceFiles.splice(indexToRemove, 1);
+
+        // 如果全部文件都删除了，则重置应用
+        if (AppState.originalFiles.length === 0) {
+            resetApp();
+            return;
+        }
+
+        // 否则，只更新列表和预览
+        updateFileList();
+        renderPreview();
+        
+        // 更新成功加载的提示信息
+        const successInfo = document.getElementById('successInfo');
+        if (successInfo) {
+            successInfo.innerText = `✅ 已成功加载 ${AppState.invoiceFiles.length} 张发票 ✨`;
+        }
+
+    } catch (error) {
+        console.error(`移除文件 #${indexToRemove} 时出错:`, error);
+        alert('移除文件时出错，请重试。');
     }
+}
+
+async function handleFiles(files) {
+    if (!files || files.length === 0) return;
 
     if (AppState.isProcessing) {
         alert('正在处理文件中，请稍候...');
         return;
     }
 
-    const pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
+    let pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
     
     if (!pdfFiles.length) {
         alert('请选择PDF文件！');
         return;
     }
 
-    if (pdfFiles.length > CONFIG.MAX_FILES) {
+    // 将新文件与现有文件合并
+    const combinedFiles = [...AppState.originalFiles, ...pdfFiles];
+    
+    // 去重，防止重复添加相同文件
+    const uniqueFiles = combinedFiles.filter((file, index, self) =>
+        index === self.findIndex((f) => (
+            f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+        ))
+    );
+
+    if (uniqueFiles.length > CONFIG.MAX_FILES) {
         alert(`最多支持${CONFIG.MAX_FILES}个文件，已自动截取前${CONFIG.MAX_FILES}个`);
-        pdfFiles.length = CONFIG.MAX_FILES;
+        uniqueFiles.length = CONFIG.MAX_FILES;
+    }
+
+    // 确定真正需要处理的新文件
+    const newFilesToProcess = uniqueFiles.filter(uf => 
+        !AppState.originalFiles.some(of => 
+            of.name === uf.name && of.size === uf.size && of.lastModified === of.lastModified
+        )
+    );
+
+    if (newFilesToProcess.length === 0 && pdfFiles.length > 0) {
+        alert('所有选择的文件都已在列表中。');
+        return;
     }
 
     AppState.isProcessing = true;
-    AppState.invoiceFiles = [];
-    AppState.originalFileNames = pdfFiles.map(f => f.name);
-    AppState.originalFiles = pdfFiles; // 保存原始文件对象
     
     const progressWrapper = document.getElementById('progressWrapper');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
-    
-    if (!progressWrapper || !progressBar || !progressText) {
-        console.error('进度条元素不存在');
-        AppState.isProcessing = false;
-        return;
-    }
     
     progressWrapper.style.display = 'block';
     progressBar.style.width = '0%';
     progressText.innerText = `准备中...`;
 
     try {
-        for (let i = 0; i < pdfFiles.length; i++) {
-            progressText.innerText = `解析中 ${i + 1} / ${pdfFiles.length}`;
+        for (let i = 0; i < newFilesToProcess.length; i++) {
+            const file = newFilesToProcess[i];
+            const currentIndex = AppState.originalFiles.length + i + 1;
+            progressText.innerText = `解析中 ${currentIndex} / ${uniqueFiles.length}`;
             
             try {
-                const data = await pdfFiles[i].arrayBuffer();
+                const data = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ 
                     data, 
                     cMapUrl: './pdfjs/web/cmaps/',
@@ -163,31 +183,28 @@ async function handleFiles(files) {
                 
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                
-                if (!context) {
-                    throw new Error('无法获取canvas上下文');
-                }
+                if (!context) throw new Error('无法获取canvas上下文');
                 
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
                 
-                await page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                }).promise;
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
                 
                 const imageData = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
+                
+                // 将新处理的文件和数据添加到AppState
+                AppState.originalFiles.push(file);
                 AppState.invoiceFiles.push(imageData);
                 
-                const progress = Math.round(((i + 1) / pdfFiles.length) * 100);
+                const progress = Math.round(((AppState.originalFiles.length) / uniqueFiles.length) * 100);
                 progressBar.style.width = `${progress}%`;
                 
-                // 释放canvas内存
                 canvas.width = 0;
                 canvas.height = 0;
                 
             } catch (error) {
-                console.error(`文件 ${pdfFiles[i].name} 处理失败:`, error);
+                console.error(`文件 ${i+1} 处理失败:`, error);
+                // 在这里可以添加UI提示，告知用户哪个文件处理失败
                 continue;
             }
         }
@@ -196,22 +213,14 @@ async function handleFiles(files) {
         const feedbackArea = document.getElementById('feedbackArea');
         const successInfo = document.getElementById('successInfo');
         
-        if (!dropZone || !feedbackArea || !successInfo) {
-            throw new Error('必要的DOM元素不存在');
-        }
-        
         dropZone.style.display = 'none';
         feedbackArea.style.display = 'flex';
         successInfo.innerText = `✅ 已成功加载 ${AppState.invoiceFiles.length} 张发票 ✨`;
         
-        // 更新文件列表
-        updateFileList(pdfFiles);
+        updateFileList();
         
-        const exportBtn = document.getElementById('exportBtn');
-        const printBtn = document.getElementById('printBtn');
-        
-        if (exportBtn) exportBtn.disabled = false;
-        if (printBtn) printBtn.disabled = false;
+        document.getElementById('exportBtn').disabled = false;
+        document.getElementById('printBtn').disabled = false;
         
         renderPreview();
         
@@ -221,33 +230,25 @@ async function handleFiles(files) {
         resetApp();
     } finally {
         AppState.isProcessing = false;
-        if (progressWrapper) {
-            progressWrapper.style.display = 'none';
-        }
+        progressWrapper.style.display = 'none';
     }
 }
 
 function renderPreview() {
     try {
         const grid = document.getElementById('previewGrid');
-        if (!grid) {
-            console.error('renderPreview: 预览容器不存在');
-            return;
-        }
+        if (!grid) return;
         
         grid.innerHTML = '';
-        
         if (!AppState.invoiceFiles.length) return;
         
         const totalPages = Math.ceil(AppState.invoiceFiles.length / AppState.currentMode);
         
         for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
             const pageDiv = document.createElement('div');
-            
             const pageClass = AppState.currentMode === 2 ? 'v-page' : 'h-page';
             const linesClass = AppState.showLines ? 'show-lines' : '';
             pageDiv.className = `preview-page ${pageClass} ${linesClass}`;
-            
             pageDiv.innerHTML = '<div class="line-h"></div><div class="line-v"></div>';
             
             for (let slotIndex = 0; slotIndex < AppState.currentMode; slotIndex++) {
@@ -280,108 +281,57 @@ function renderPreview() {
                 
                 pageDiv.appendChild(slot);
             }
-            
             grid.appendChild(pageDiv);
         }
-        
         updateModeButtons();
-        
     } catch (error) {
         console.error('渲染预览时发生错误:', error);
-        
-        // 提供降级体验
         const grid = document.getElementById('previewGrid');
         if (grid) {
-            grid.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #e67e22;">
-                    <p>⚠️ 预览渲染失败</p>
-                    <p>请尝试调整设置或重新加载文件</p>
-                </div>
-            `;
+            grid.innerHTML = `<div style="text-align: center; padding: 20px; color: #e67e22;"><p>⚠️ 预览渲染失败</p><p>请尝试调整设置或重新加载文件</p></div>`;
         }
     }
 }
 
 function updateMargin(value) {
-    try {
-        AppState.currentMargin = parseInt(value);
-        const marginVal = document.getElementById('marginVal');
-        if (marginVal) {
-            marginVal.innerText = value;
-        }
-        renderPreview();
-    } catch (error) {
-        console.error('更新边距时出错:', error);
-    }
+    AppState.currentMargin = parseInt(value);
+    document.getElementById('marginVal').innerText = value;
+    renderPreview();
 }
 
 function setMode(mode) {
     if (AppState.currentMode === mode) return;
-    
     AppState.currentMode = mode;
-    
-    try {
-        const body = document.getElementById('theBody');
-        if (body) {
-            body.className = `mode-${mode}`;
-        }
-        renderPreview();
-    } catch (error) {
-        console.error('设置模式时出错:', error);
-    }
+    document.getElementById('theBody').className = `mode-${mode}`;
+    renderPreview();
 }
 
 function toggleLines() {
-    try {
-        AppState.showLines = !AppState.showLines;
-        const btn = document.getElementById('lineToggle');
-        
-        if (btn) {
-            btn.innerText = AppState.showLines ? '已开启' : '已关闭';
-            btn.className = `toggle-btn ${AppState.showLines ? 'btn-on' : 'btn-off'}`;
-        }
-        
-        renderPreview();
-    } catch (error) {
-        console.error('切换裁剪线时出错:', error);
-    }
+    AppState.showLines = !AppState.showLines;
+    const btn = document.getElementById('lineToggle');
+    btn.innerText = AppState.showLines ? '已开启' : '已关闭';
+    btn.className = `toggle-btn ${AppState.showLines ? 'btn-on' : 'btn-off'}`;
+    renderPreview();
 }
 
 function updateModeButtons() {
-    try {
-        const m2 = document.getElementById('m2');
-        const m4 = document.getElementById('m4');
-        
-        if (m2) m2.classList.toggle('active', AppState.currentMode === 2);
-        if (m4) m4.classList.toggle('active', AppState.currentMode === 4);
-    } catch (error) {
-        console.error('更新模式按钮时出错:', error);
-    }
+    document.getElementById('m2').classList.toggle('active', AppState.currentMode === 2);
+    document.getElementById('m4').classList.toggle('active', AppState.currentMode === 4);
 }
 
 async function savePDF() {
-    if (!AppState.invoiceFiles.length) {
-        console.warn('savePDF: 没有可导出的文件');
-        return;
-    }
+    if (!AppState.invoiceFiles.length) return;
     
     try {
         const orientation = AppState.currentMode === 2 ? 'portrait' : 'landscape';
-        
-        const doc = new jsPDF({
-            orientation: orientation,
-            unit: 'mm',
-            format: 'a4'
-        });
-        
-        if (!doc) {
-            throw new Error('无法创建PDF文档');
-        }
+        const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
+        if (!doc) throw new Error('无法创建PDF文档');
         
         const margin = AppState.currentMargin;
         
         for (let i = 0; i < AppState.invoiceFiles.length; i++) {
-            if (i > 0 && i % AppState.currentMode === 0) {
+            // 修复核心：增加 i < AppState.invoiceFiles.length 判断，避免最后一次循环冗余添加页面
+            if (i > 0 && i % AppState.currentMode === 0 && i < AppState.invoiceFiles.length) {
                 doc.addPage();
             }
             
@@ -389,377 +339,192 @@ async function savePDF() {
             let x, y, slotWidth, slotHeight;
             
             if (AppState.currentMode === 2) {
-                slotWidth = 210;
-                slotHeight = 148.5;
-                x = 0;
-                y = slotIndex === 0 ? 0 : 148.5;
+                slotWidth = 210; slotHeight = 148.5;
+                x = 0; y = slotIndex === 0 ? 0 : 148.5;
             } else {
-                slotWidth = 148.5;
-                slotHeight = 105;
+                slotWidth = 148.5; slotHeight = 105;
                 x = (slotIndex === 1 || slotIndex === 3) ? 148.5 : 0;
                 y = slotIndex < 2 ? 0 : 105;
             }
             
-            doc.addImage(
-                AppState.invoiceFiles[i],
-                'JPEG',
-                x + margin,
-                y + margin,
-                slotWidth - (margin * 2),
-                slotHeight - (margin * 2)
-            );
+            doc.addImage(AppState.invoiceFiles[i], 'JPEG', x + margin, y + margin, slotWidth - (margin * 2), slotHeight - (margin * 2));
             
             if (AppState.showLines && slotIndex === (AppState.currentMode - 1)) {
-                doc.setDrawColor(120);
-                doc.setLineWidth(0.1);
-                
+                doc.setDrawColor(120); doc.setLineWidth(0.1);
                 doc.setLineDashPattern([2, 2], 0);
-                
                 if (AppState.currentMode === 2) {
                     doc.line(0, 148.5, 210, 148.5);
                 } else {
                     doc.line(0, 105, 297, 105);
                     doc.line(148.5, 0, 148.5, 210);
                 }
-                
                 doc.setLineDashPattern([], 0);
             }
         }
         
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        doc.save(`发票合版_${timestamp}.pdf`);
+        // 保留你需要的文件名格式：发票_202601111313.pdf
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `${year}${month}${day}${hour}${minute}`;
         
+        doc.save(`发票_${timestamp}.pdf`);
     } catch (error) {
         console.error('导出PDF失败:', error);
-        
-        // 提供更详细的错误信息
         let errorMsg = '导出PDF失败';
-        if (error.message && error.message.includes('security')) {
-            errorMsg += '：可能是浏览器安全策略限制，请尝试在其他浏览器中操作';
-        } else if (error.message && error.message.includes('memory')) {
-            errorMsg += '：文件过大导致内存不足，请减少文件数量';
-        }
-        
+        if (error.message?.includes('security')) errorMsg += '：可能是浏览器安全策略限制，请尝试在其他浏览器中操作';
+        else if (error.message?.includes('memory')) errorMsg += '：文件过大导致内存不足，请减少文件数量';
         alert(errorMsg + '，请重试！');
     }
 }
 
 function showPrintDialog() {
-    if (!AppState.invoiceFiles.length) {
-        console.warn('showPrintDialog: 没有可打印的文件');
-        return;
-    }
-    
-    try {
-        const modeText = AppState.currentMode === 2 ? '1页2张(纵向)' : '1页4张(横向)';
-        const orientationText = AppState.currentMode === 2 ? '纵向' : '横向';
-        
-        const printModeText = document.getElementById('printModeText');
-        const printOrientationText = document.getElementById('printOrientationText');
-        
-        if (printModeText) printModeText.textContent = modeText;
-        if (printOrientationText) printOrientationText.textContent = orientationText;
-        
-        const printDialog = document.getElementById('printDialog');
-        if (printDialog) {
-            printDialog.style.display = 'flex';
-        }
-    } catch (error) {
-        console.error('显示打印对话框时出错:', error);
-    }
+    if (!AppState.invoiceFiles.length) return;
+    const modeText = AppState.currentMode === 2 ? '1页2张(纵向)' : '1页4张(横向)';
+    const orientationText = AppState.currentMode === 2 ? '纵向' : '横向';
+    document.getElementById('printModeText').textContent = modeText;
+    document.getElementById('printOrientationText').textContent = orientationText;
+    document.getElementById('printDialog').style.display = 'flex';
 }
 
 function hidePrintDialog() {
-    try {
-        const printDialog = document.getElementById('printDialog');
-        if (printDialog) {
-            printDialog.style.display = 'none';
-        }
-    } catch (error) {
-        console.error('隐藏打印对话框时出错:', error);
-    }
+    document.getElementById('printDialog').style.display = 'none';
 }
 
 function handlePrint() {
-    if (!AppState.invoiceFiles.length) {
-        console.warn('handlePrint: 没有可打印的文件');
-        return;
-    }
-    
-    try {
-        setTimeout(() => {
-            window.print();
-            
-            setTimeout(() => {
-                window.scrollTo(0, 0);
-            }, 100);
-        }, 100);
-    } catch (error) {
-        console.error('执行打印时出错:', error);
-        alert('打印失败，请检查打印机设置！');
-    }
+    if (!AppState.invoiceFiles.length) return;
+    setTimeout(() => { window.print(); setTimeout(() => { window.scrollTo(0, 0); }, 100); }, 100);
 }
 
 function resetApp() {
-    if (AppState.isProcessing) {
-        if (!confirm('文件正在处理中，确定要重置吗？')) {
-            return;
-        }
-    }
+    if (AppState.isProcessing && !confirm('文件正在处理中，确定要重置吗？')) return;
+
+    AppState.invoiceFiles = [];
+    AppState.originalFiles = [];
+    AppState.currentMargin = CONFIG.DEFAULT_MARGIN;
+    AppState.showLines = true;
+    AppState.isProcessing = false;
     
-    try {
-        AppState.invoiceFiles = [];
-        AppState.originalFileNames = [];
-        AppState.originalFiles = [];
-        AppState.currentMargin = 2;
-        AppState.showLines = true;
-        AppState.isProcessing = false;
-        
-        const dropZone = document.getElementById('dropZone');
-        const feedbackArea = document.getElementById('feedbackArea');
-        const previewGrid = document.getElementById('previewGrid');
-        const exportBtn = document.getElementById('exportBtn');
-        const printBtn = document.getElementById('printBtn');
-        const progressWrapper = document.getElementById('progressWrapper');
-        const marginRange = document.getElementById('marginRange');
-        const marginVal = document.getElementById('marginVal');
-        const lineToggle = document.getElementById('lineToggle');
-        const fileIn = document.getElementById('fileIn');
-        
-        if (dropZone) dropZone.style.display = 'flex';
-        if (feedbackArea) feedbackArea.style.display = 'none';
-        if (previewGrid) previewGrid.innerHTML = '';
-        if (exportBtn) exportBtn.disabled = true;
-        if (printBtn) printBtn.disabled = true;
-        if (progressWrapper) progressWrapper.style.display = 'none';
-        if (marginRange) marginRange.value = 2;
-        if (marginVal) marginVal.innerText = '2';
-        if (lineToggle) {
-            lineToggle.innerText = '已开启';
-            lineToggle.className = 'toggle-btn btn-on';
-        }
-        if (fileIn) fileIn.value = '';
-        
-        setMode(4);
-        
-        hidePrintDialog();
-        
-    } catch (error) {
-        console.error('重置应用时出错:', error);
-        alert('重置失败，请刷新页面重试！');
-    }
+    document.getElementById('dropZone').style.display = 'flex';
+    document.getElementById('feedbackArea').style.display = 'none';
+    document.getElementById('previewGrid').innerHTML = '';
+    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('printBtn').disabled = true;
+    document.getElementById('progressWrapper').style.display = 'none';
+    document.getElementById('marginRange').value = CONFIG.DEFAULT_MARGIN;
+    document.getElementById('marginVal').innerText = CONFIG.DEFAULT_MARGIN;
+    const lineToggle = document.getElementById('lineToggle');
+    lineToggle.innerText = '已开启';
+    lineToggle.className = 'toggle-btn btn-on';
+    document.getElementById('fileIn').value = '';
+    
+    setMode(4);
+    hidePrintDialog();
 }
 
 function goToHomePage() {
-    try {
-        // 这里可以替换成您的主页网址
-        const homeUrl = "https://888.topmer.top";
-        
-        // 在当前页跳转
-        window.location.href = homeUrl;
-        
-    } catch (error) {
-        console.error('返回首页时出错:', error);
-        alert('无法返回首页，请稍后重试！');
-    }
+    window.location.href = "https://888.topmer.top";
 }
 
 function openInvoiceTool() {
-    try {
-        // 这里可以替换成您的发票工具网址
-        const invoiceUrl = "https://888.topmer.top/jt";
-        
-        // 在新标签页打开
-        window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
-        
-    } catch (error) {
-        console.error('打开发票工具时出错:', error);
-        alert('无法打开图片工具，请稍后重试！');
-    }
+    window.open("https://888.topmer.top/jt", '_blank', 'noopener,noreferrer');
 }
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', function() {
-    // 检查浏览器兼容性
-    try {
-        checkBrowserCompatibility();
-    } catch (error) {
-        console.error('检查浏览器兼容性时出错:', error);
-    }
+    if (!checkBrowserCompatibility()) return;
+
+    const elements = {
+        fileIn: document.getElementById('fileIn'),
+        dropZone: document.getElementById('dropZone'),
+        marginRange: document.getElementById('marginRange'),
+        lineToggle: document.getElementById('lineToggle'),
+        m2: document.getElementById('m2'),
+        m4: document.getElementById('m4'),
+        exportBtn: document.getElementById('exportBtn'),
+        printBtn: document.getElementById('printBtn'),
+        resetBtn: document.getElementById('resetBtn'),
+        homeBtn: document.getElementById('homeBtn'),
+        invoiceBtn: document.getElementById('invoiceBtn'),
+        helpBtn: document.getElementById('helpBtn'),
+        helpClose: document.getElementById('helpClose'),
+        confirmPrint: document.getElementById('confirmPrint'),
+        cancelPrint: document.getElementById('cancelPrint'),
+        browserWarningClose: document.getElementById('browserWarningClose'),
+        printDialog: document.getElementById('printDialog'),
+        helpDialog: document.getElementById('helpDialog'),
+        fileList: document.getElementById('fileList')
+    };
+
+    elements.fileIn?.addEventListener('change', e => handleFiles(e.target.files));
+    elements.dropZone?.addEventListener('click', () => elements.fileIn.click());
     
-    // 获取DOM元素
-    const fileIn = document.getElementById('fileIn');
-    const dropZone = document.getElementById('dropZone');
-    const marginRange = document.getElementById('marginRange');
-    const lineToggle = document.getElementById('lineToggle');
-    const m2 = document.getElementById('m2');
-    const m4 = document.getElementById('m4');
-    const exportBtn = document.getElementById('exportBtn');
-    const printBtn = document.getElementById('printBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const homeBtn = document.getElementById('homeBtn');
-    const invoiceBtn = document.getElementById('invoiceBtn');
-    const helpBtn = document.getElementById('helpBtn');
-    const helpClose = document.getElementById('helpClose');
-    const confirmPrint = document.getElementById('confirmPrint');
-    const cancelPrint = document.getElementById('cancelPrint');
-    const browserWarningClose = document.getElementById('browserWarningClose');
-    
-    // 文件输入事件监听
-    if (fileIn) {
-        fileIn.addEventListener('change', function(e) {
-            if (e.target && e.target.files) {
-                handleFiles(e.target.files);
+    elements.dropZone?.addEventListener('dragover', e => {
+        e.preventDefault();
+        elements.dropZone.style.background = 'rgba(255, 255, 255, 0.4)';
+        elements.dropZone.style.borderColor = '#147a61';
+    });
+    elements.dropZone?.addEventListener('dragleave', e => {
+        e.preventDefault();
+        elements.dropZone.style.background = 'rgba(255, 255, 255, 0.2)';
+        elements.dropZone.style.borderColor = '#4a6d7c';
+    });
+    elements.dropZone?.addEventListener('drop', e => {
+        e.preventDefault();
+        elements.dropZone.style.background = 'rgba(255, 255, 255, 0.2)';
+        elements.dropZone.style.borderColor = '#4a6d7c';
+        if (e.dataTransfer?.files.length) handleFiles(e.dataTransfer.files);
+    });
+
+    elements.marginRange?.addEventListener('input', e => updateMargin(e.target.value));
+    elements.lineToggle?.addEventListener('click', toggleLines);
+    elements.m2?.addEventListener('click', () => setMode(2));
+    elements.m4?.addEventListener('click', () => setMode(4));
+    elements.exportBtn?.addEventListener('click', savePDF);
+    elements.printBtn?.addEventListener('click', showPrintDialog);
+    elements.resetBtn?.addEventListener('click', resetApp);
+    elements.homeBtn?.addEventListener('click', goToHomePage);
+    elements.invoiceBtn?.addEventListener('click', openInvoiceTool);
+    elements.helpBtn?.addEventListener('click', showHelp);
+    elements.helpClose?.addEventListener('click', closeHelp);
+    elements.confirmPrint?.addEventListener('click', () => { hidePrintDialog(); handlePrint(); });
+    elements.cancelPrint?.addEventListener('click', hidePrintDialog);
+    elements.browserWarningClose?.addEventListener('click', closeBrowserWarning);  
+
+    // 文件列表删除按钮事件委托
+    elements.fileList?.addEventListener('click', e => {
+        if (e.target.classList.contains('file-remove-btn')) {
+            const index = parseInt(e.target.dataset.index, 10);
+            if (!isNaN(index)) {
+                removeFile(index);
             }
-        });
-    }
-    
-    // 拖拽区域事件监听
-    if (dropZone) {
-        dropZone.addEventListener('click', function() {
-            fileIn.click();
-        });
-        
-        dropZone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            dropZone.style.background = 'rgba(255, 255, 255, 0.4)';
-            dropZone.style.borderColor = '#147a61';
-        });
-        
-        dropZone.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            dropZone.style.background = 'rgba(255, 255, 255, 0.2)';
-            dropZone.style.borderColor = '#4a6d7c';
-        });
-        
-        dropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            dropZone.style.background = 'rgba(255, 255, 255, 0.2)';
-            dropZone.style.borderColor = '#4a6d7c';
-            
-            if (e.dataTransfer && e.dataTransfer.files.length) {
-                handleFiles(e.dataTransfer.files);
-            }
-        });
-    }
-    
-    // 边距滑块事件
-    if (marginRange) {
-        marginRange.addEventListener('input', function(e) {
-            updateMargin(e.target.value);
-        });
-    }
-    
-    // 裁剪线切换事件
-    if (lineToggle) {
-        lineToggle.addEventListener('click', toggleLines);
-    }
-    
-    // 布局模式切换事件
-    if (m2) {
-        m2.addEventListener('click', function() {
-            setMode(2);
-        });
-    }
-    
-    if (m4) {
-        m4.addEventListener('click', function() {
-            setMode(4);
-        });
-    }
-    
-    // 按钮事件
-    if (exportBtn) {
-        exportBtn.addEventListener('click', savePDF);
-    }
-    
-    if (printBtn) {
-        printBtn.addEventListener('click', showPrintDialog);
-    }
-    
-    if (resetBtn) {
-        resetBtn.addEventListener('click', resetApp);
-    }
-    
-    if (homeBtn) {
-        homeBtn.addEventListener('click', goToHomePage);
-    }
-    
-    if (invoiceBtn) {
-        invoiceBtn.addEventListener('click', openInvoiceTool);
-    }
-    
-    if (helpBtn) {
-        helpBtn.addEventListener('click', showHelp);
-    }
-    
-    if (helpClose) {
-        helpClose.addEventListener('click', closeHelp);
-    }
-    
-    if (confirmPrint) {
-        confirmPrint.addEventListener('click', function() {
-            hidePrintDialog();
-            handlePrint();
-        });
-    }
-    
-    if (cancelPrint) {
-        cancelPrint.addEventListener('click', hidePrintDialog);
-    }
-    
-    if (browserWarningClose) {
-        browserWarningClose.addEventListener('click', closeBrowserWarning);
-    }
-    
-    // 打印对话框点击外部关闭
-    const printDialog = document.getElementById('printDialog');
-    if (printDialog) {
-        printDialog.addEventListener('click', function(e) {
-            if (e.target === this) {
-                hidePrintDialog();
-            }
-        });
-    }
-    
-    // 帮助弹窗点击外部关闭
-    const helpDialog = document.getElementById('helpDialog');
-    if (helpDialog) {
-        helpDialog.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeHelp();
-            }
-        });
-    }
-    
-    // ESC键关闭弹窗
-    document.addEventListener('keydown', function(e) {
+        }
+    });
+
+    elements.printDialog?.addEventListener('click', e => { if (e.target === elements.printDialog) hidePrintDialog(); });
+    elements.helpDialog?.addEventListener('click', e => { if (e.target === elements.helpDialog) closeHelp(); });
+
+    document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             hidePrintDialog();
             closeHelp();
             closeBrowserWarning();
         }
     });
-    
-    // 全局错误监听
-    window.addEventListener('error', function(event) {
-        console.error('全局错误捕获:', event.error);
-        
-        // 不显示给用户（避免干扰），但记录到控制台
-        if (event.error && event.error.message) {
-            console.error('错误详情:', event.error.message);
-            if (event.error.stack) {
-                console.error('错误堆栈:', event.error.stack);
-            }
-        }
-    });
-    
-    // 未处理的Promise拒绝
-    window.addEventListener('unhandledrejection', function(event) {
+
+    window.addEventListener('error', event => console.error('全局错误捕获:', event.error));
+    window.addEventListener('unhandledrejection', event => {
         console.error('未处理的Promise拒绝:', event.reason);
-        event.preventDefault(); // 防止控制台默认错误
+        event.preventDefault();
     });
-    
-    // 初始化模式按钮
+
+    const yearSpan = document.getElementById('copyright-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
+
     updateModeButtons();
 });
