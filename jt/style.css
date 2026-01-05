@@ -266,13 +266,16 @@ body.mode-12 { }
     margin-top: var(--spacing-xs);
 }
 
-/* ========== 文件列表样式 ========== */
+/* ========== 文件列表容器样式 ========== */
 .file-list-container {
     width: 100%;
     margin: var(--spacing-md) 0;
 }
 
 .file-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 13px;
     font-weight: 600;
     color: var(--color-dark-gray);
@@ -281,6 +284,22 @@ body.mode-12 { }
     border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
+.continue-add-btn {
+    background: var(--color-secondary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.continue-add-btn:hover {
+    background: #0d5d49;
+}
+
+/* 文件列表滚动容器 - 始终显示滚动条 */
 .file-list-scroll {
     max-height: 180px;
     overflow-y: auto;
@@ -289,23 +308,32 @@ body.mode-12 { }
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.3);
     padding: var(--spacing-xs);
+    /* 确保滚动条始终显示 */
+    overflow-y: scroll !important;
 }
 
+/* 文件列表样式 */
 .file-list {
     font-size: var(--font-size-sm);
 }
 
+/* 文件项样式 */
 .file-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--spacing-xs) var(--spacing-xs);
+    padding: 4px 10px;
     margin: 1px 0;
     background: rgba(255, 255, 255, var(--opacity-medium));
     border-radius: var(--border-radius-small);
-    border-left: 2px solid var(--color-primary);
+   
     min-height: 20px;
     position: relative;
+    transition: all var(--transition-fast);
+}
+
+.file-item:hover {
+    background: rgba(255, 255, 255, 0.7);
 }
 
 .file-name {
@@ -313,18 +341,30 @@ body.mode-12 { }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: var(--spacing-md);
-    font-size: 10px;
-    max-width: 180px;
+    padding-right: 10px;
+    font-size: 11px;
+    color: var(--color-dark-gray);
 }
 
-.file-status {
-    font-size: var(--font-size-xs);
-    padding: 1px var(--spacing-xs);
-    border-radius: 8px;
-    background: var(--color-success);
-    color: var(--color-white);
-    white-space: nowrap;
+.file-delete {
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    font-size: 16px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.file-delete:hover {
+    background-color: rgba(211, 84, 0, 0.1);
+    transform: scale(1.1);
 }
 
 /* 文件名悬停提示 */
@@ -343,6 +383,31 @@ body.mode-12 { }
     z-index: 100;
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* 确保滚动条在内容少时也显示 */
+.file-list-scroll::-webkit-scrollbar {
+    width: 8px !important;
+}
+
+.file-list-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.file-list-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.file-list-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox 滚动条样式 */
+.file-list-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
 }
 
 /* ========== 进度条样式 ========== */
@@ -561,6 +626,46 @@ body.mode-12 { }
     aspect-ratio: 297/210; 
 }
 
+/* ========== 槽位样式 - 统一所有模式 ========== */
+.slot { 
+    position: absolute !important; 
+    display: flex !important;
+    align-items: flex-start !important; /* 顶部对齐 */
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    background: var(--color-white) !important; /* 留白背景 */
+    overflow: hidden !important; /* 超出部分隐藏 */
+    z-index: 1 !important;
+}
+
+/* ========== 图片样式 - 统一所有模式 ========== */
+.slot img { 
+    width: 100% !important; /* 宽度填满槽位 */
+    height: auto !important; /* 高度自适应保持比例 */
+    max-height: none !important;
+    object-fit: cover !important; /* 保持比例，超出部分裁剪 */
+    object-position: top center !important; /* 顶部对齐 */
+    display: block !important;
+    background: var(--color-white) !important;
+}
+
+/* ========== 6张模式特殊样式 ========== */
+body.mode-6 .slot {
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    background: var(--color-white) !important;
+}
+
+body.mode-6 .slot img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+    object-position: top center !important;
+    background: var(--color-white) !important;
+}
+
 /* ========== 9张模式特殊样式 ========== */
 body.mode-9 .slot {
     overflow: hidden !important;
@@ -572,7 +677,24 @@ body.mode-9 .slot {
 
 body.mode-9 .slot img {
     width: 100% !important;
-    min-height: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+    object-position: top center !important;
+    background: var(--color-white) !important;
+}
+
+/* ========== 12张模式特殊样式 ========== */
+body.mode-12 .slot {
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    background: var(--color-white) !important;
+}
+
+body.mode-12 .slot img {
+    width: 100% !important;
+    height: auto !important;
     object-fit: cover !important;
     object-position: top center !important;
     background: var(--color-white) !important;
@@ -593,26 +715,6 @@ body.mode-9 .slot img {
 .cut-line.horizontal {
     border-top: 0.5px dashed var(--color-danger);
     width: 100%;
-}
-
-/* ========== 槽位样式 ========== */
-.slot { 
-    position: absolute; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    box-sizing: border-box;
-    background: var(--color-white);
-    overflow: hidden;
-    z-index: 1;
-}
-
-.slot img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: contain; 
-    display: block;
-    background: var(--color-white);
 }
 
 /* ========== 浏览器兼容性警告 ========== */
@@ -701,6 +803,25 @@ body.mode-9 .slot img {
         overflow: visible !important;
     }
     
+    /* 6张模式打印样式 */
+    body.mode-6 .slot {
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        background: var(--color-white) !important;
+    }
+    
+    body.mode-6 .slot img {
+        width: 100% !important;
+        height: auto !important;
+        object-fit: cover !important;
+        object-position: top center !important;
+        background: var(--color-white) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
     /* 9张模式打印样式 */
     body.mode-9 .slot {
         overflow: hidden !important;
@@ -712,7 +833,26 @@ body.mode-9 .slot img {
     
     body.mode-9 .slot img {
         width: 100% !important;
-        min-height: 100% !important;
+        height: auto !important;
+        object-fit: cover !important;
+        object-position: top center !important;
+        background: var(--color-white) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* 12张模式打印样式 */
+    body.mode-12 .slot {
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        background: var(--color-white) !important;
+    }
+    
+    body.mode-12 .slot img {
+        width: 100% !important;
+        height: auto !important;
         object-fit: cover !important;
         object-position: top center !important;
         background: var(--color-white) !important;
@@ -837,17 +977,6 @@ body.mode-9 .slot img {
     /* 最后一页不添加分页 */
     .preview-page:last-child {
         page-break-after: auto !important;
-    }
-    
-    /* 槽位样式 */
-    .slot {
-        background: var(--color-white) !important;
-    }
-    
-    .slot img {
-        filter: none !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
     
     /* 确保打印时预览页面完全填充纸张 */
@@ -1060,12 +1189,13 @@ body.mode-9 .slot img {
 @media (max-width: 768px) {
     .file-name {
         max-width: 120px;
-        font-size: 9px;
+        font-size: 11px;
     }
     
-    .file-status {
-        font-size: 8px;
-        padding: 1px var(--spacing-xs);
+    .file-delete {
+        font-size: 14px;
+        width: 18px;
+        height: 18px;
     }
     
     .help-dialog-content {

@@ -25,8 +25,8 @@ const CONFIG = {
     MARGIN_MM: 4.3,
     SPACING_MM: 4.3,
     TARGET_WIDTH: 1080,
-    TARGET_HEIGHT: 2400,
-    TARGET_RATIO: 1080 / 2400, // 0.45 (3:4)
+    TARGET_HEIGHT: 1440, // 保持3:4比例
+    TARGET_RATIO: 1080 / 1440, // 0.75 (3:4)
     MAX_FILES: 50,
     MM_TO_PX: 96 / 25.4 // 1mm = 3.779527559055118像素（96DPI）
 };
@@ -65,6 +65,7 @@ function calculateLayout(mode) {
         }
         
         return {
+            mode: 6,
             columns,
             rows,
             photosPerPage: columns * rows,
@@ -91,6 +92,7 @@ function calculateLayout(mode) {
         }
         
         return {
+            mode: 9,
             columns,
             rows,
             photosPerPage: columns * rows,
@@ -119,6 +121,7 @@ function calculateLayout(mode) {
         }
         
         return {
+            mode: 12,
             columns,
             rows,
             photosPerPage: columns * rows,
@@ -185,6 +188,59 @@ function closeHelp() {
     }
 }
 
+// ========== 继续添加文件功能 ==========
+function continueAddFiles() {
+    document.getElementById('fileIn').click();
+}
+
+// ========== 删除单个文件 ==========
+function deleteFile(index) {
+    if (index < 0 || index >= AppState.photoFiles.length) {
+        console.error('deleteFile: 索引无效', index);
+        return;
+    }
+    
+    // 从各个状态中移除文件
+    AppState.photoFiles.splice(index, 1);
+    AppState.originalFileNames.splice(index, 1);
+    AppState.originalFiles.splice(index, 1);
+    
+    // 更新文件列表显示
+    updateFileList(AppState.originalFiles);
+    
+    // 更新成功信息
+    const successInfo = document.getElementById('successInfo');
+    if (successInfo) {
+        successInfo.innerText = `✅ 已成功加载 ${AppState.photoFiles.length} 张手机截图 ✨`;
+    }
+    
+    // 如果没有文件了，显示拖拽区域
+    if (AppState.photoFiles.length === 0) {
+        const dropZone = document.getElementById('dropZone');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const exportBtn = document.getElementById('exportBtn');
+        const printBtn = document.getElementById('printBtn');
+        
+        if (dropZone) dropZone.style.display = 'flex';
+        if (feedbackArea) feedbackArea.style.display = 'none';
+        if (exportBtn) exportBtn.disabled = true;
+        if (printBtn) printBtn.disabled = true;
+        
+        // 清空预览
+        const previewGrid = document.getElementById('previewGrid');
+        if (previewGrid) previewGrid.innerHTML = '';
+    } else {
+        // 重新渲染预览
+        renderPreview();
+        
+        // 确保按钮可用
+        const exportBtn = document.getElementById('exportBtn');
+        const printBtn = document.getElementById('printBtn');
+        if (exportBtn) exportBtn.disabled = false;
+        if (printBtn) printBtn.disabled = false;
+    }
+}
+
 // ========== 文件列表更新函数 ==========
 function updateFileList(files) {
     try {
@@ -196,25 +252,24 @@ function updateFileList(files) {
             return;
         }
         
+        fileCount.textContent = files.length;
+        
         if (!files || files.length === 0) {
             fileList.innerHTML = '';
-            fileCount.textContent = '0';
             return;
         }
         
-        fileCount.textContent = files.length;
-        
         fileList.innerHTML = files.map((file, index) => {
-            const displayName = file.name.length > 25 
-                ? file.name.substring(0, 22) + '...' 
+            const displayName = file.name.length > 30 
+                ? file.name.substring(0, 27) + '...' 
                 : file.name;
                 
             return `
-                <div class="file-item" title="文件名: ${file.name}">
+                <div class="file-item" data-index="${index}">
                     <div class="file-name" title="${file.name}">
                         ${index + 1}. ${displayName}
                     </div>
-                    <div class="file-status">✓ 已加载</div>
+                    <button class="file-delete" onclick="deleteFile(${index})" title="删除此文件">×</button>
                 </div>
             `;
         }).join('');
@@ -223,7 +278,7 @@ function updateFileList(files) {
     }
 }
 
-// ========== 处理单张图片 ==========
+// ========== 处理单张图片（保留原始比例） ==========
 async function processImageFile(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -232,53 +287,17 @@ async function processImageFile(file) {
             const img = new Image();
             
             img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                if (!ctx) {
-                    reject(new Error('无法获取canvas上下文'));
-                    return;
-                }
-                
-                const currentRatio = img.width / img.height;
-                const targetRatio = CONFIG.TARGET_RATIO;
-                
-                let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
-                
-                if (currentRatio > targetRatio) {
-                    drawHeight = CONFIG.TARGET_HEIGHT;
-                    drawWidth = drawHeight * currentRatio;
-                    offsetX = (drawWidth - CONFIG.TARGET_WIDTH) / 2;
-                } else {
-                    drawWidth = CONFIG.TARGET_WIDTH;
-                    drawHeight = drawWidth / currentRatio;
-                    offsetY = (drawHeight - CONFIG.TARGET_HEIGHT) / 2;
-                }
-                
-                canvas.width = drawWidth;
-                canvas.height = drawHeight;
-                
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, drawWidth, drawHeight);
-                
-                ctx.drawImage(img, 0, 0, img.width, img.height, 
-                             offsetX, offsetY, CONFIG.TARGET_WIDTH, CONFIG.TARGET_HEIGHT);
-                
-                const imageData = canvas.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
-                
+                // 这里不进行裁剪，只保存原始图片信息和数据URL
+                // 裁剪会在预览和PDF生成时根据布局动态进行
                 resolve({
-                    dataUrl: imageData,
+                    dataUrl: e.target.result, // 使用原始数据URL
                     originalName: file.name,
                     dimensions: {
                         originalWidth: img.width,
                         originalHeight: img.height,
-                        processedWidth: drawWidth,
-                        processedHeight: drawHeight
+                        originalRatio: img.width / img.height
                     }
                 });
-                
-                canvas.width = 0;
-                canvas.height = 0;
             };
             
             img.onerror = function() {
@@ -318,15 +337,20 @@ async function handleFiles(files) {
         return;
     }
 
-    if (imageFiles.length > CONFIG.MAX_FILES) {
-        alert(`最多支持${CONFIG.MAX_FILES}个文件，已自动截取前${CONFIG.MAX_FILES}个`);
-        imageFiles.length = CONFIG.MAX_FILES;
+    // 检查是否超过最大文件数
+    const totalFiles = AppState.photoFiles.length + imageFiles.length;
+    if (totalFiles > CONFIG.MAX_FILES) {
+        const remainingSlots = CONFIG.MAX_FILES - AppState.photoFiles.length;
+        alert(`最多支持${CONFIG.MAX_FILES}个文件，已加载${AppState.photoFiles.length}个，本次最多还能添加${remainingSlots}个`);
+        
+        if (remainingSlots <= 0) {
+            return;
+        }
+        
+        imageFiles.length = remainingSlots;
     }
 
     AppState.isProcessing = true;
-    AppState.photoFiles = [];
-    AppState.originalFileNames = imageFiles.map(f => f.name);
-    AppState.originalFiles = imageFiles;
     
     const progressWrapper = document.getElementById('progressWrapper');
     const progressBar = document.getElementById('progressBar');
@@ -343,12 +367,17 @@ async function handleFiles(files) {
     progressText.innerText = `准备中...`;
 
     try {
+        const startIndex = AppState.photoFiles.length;
+        
         for (let i = 0; i < imageFiles.length; i++) {
-            progressText.innerText = `处理中 ${i + 1} / ${imageFiles.length}`;
+            const currentIndex = startIndex + i;
+            progressText.innerText = `处理中 ${currentIndex + 1} / ${totalFiles}`;
             
             try {
                 const processedImage = await processImageFile(imageFiles[i]);
                 AppState.photoFiles.push(processedImage);
+                AppState.originalFileNames.push(imageFiles[i].name);
+                AppState.originalFiles.push(imageFiles[i]);
                 
                 const progress = Math.round(((i + 1) / imageFiles.length) * 100);
                 progressBar.style.width = `${progress}%`;
@@ -367,11 +396,12 @@ async function handleFiles(files) {
             throw new Error('必要的DOM元素不存在');
         }
         
+        // 隐藏拖拽区域，显示反馈区域
         dropZone.style.display = 'none';
         feedbackArea.style.display = 'flex';
         successInfo.innerText = `✅ 已成功加载 ${AppState.photoFiles.length} 张手机截图 ✨`;
         
-        updateFileList(imageFiles);
+        updateFileList(AppState.originalFiles);
         
         const exportBtn = document.getElementById('exportBtn');
         const printBtn = document.getElementById('printBtn');
@@ -384,7 +414,6 @@ async function handleFiles(files) {
     } catch (error) {
         console.error('文件处理失败:', error);
         alert('文件处理失败，请重试！\n错误信息: ' + error.message);
-        resetApp();
     } finally {
         AppState.isProcessing = false;
         if (progressWrapper) {
@@ -393,7 +422,7 @@ async function handleFiles(files) {
     }
 }
 
-// ========== 渲染预览 ==========
+// ========== 渲染预览（根据布局动态调整） ==========
 function renderPreview() {
     try {
         const grid = document.getElementById('previewGrid');
@@ -434,33 +463,31 @@ function renderPreview() {
                     slot.style.width = `${widthPercent}%`;
                     slot.style.height = `${heightPercent}%`;
                     
+                    // 根据布局模式设置不同的样式
+                    slot.style.overflow = 'hidden';
+                    slot.style.display = 'flex';
+                    slot.style.alignItems = 'flex-start'; // 顶部对齐
+                    slot.style.justifyContent = 'center';
+                    slot.style.background = 'white';
+                    
                     const img = document.createElement('img');
                     img.src = AppState.photoFiles[fileIndex].dataUrl;
                     img.alt = `手机截图 ${fileIndex + 1} - ${AppState.photoFiles[fileIndex].originalName}`;
+                    
+                    // 关键：统一设置图片在槽位中的显示方式
+                    // 宽度填满槽位，高度按比例自适应，顶部对齐，超出裁剪
+                    img.style.width = '100%';
+                    img.style.height = 'auto';
+                    img.style.objectFit = 'cover'; // 保持比例，超出部分裁剪
+                    img.style.objectPosition = 'top center'; // 顶部对齐
                     img.style.background = 'white';
-
-                    if (AppState.currentMode === 9) {
-                        img.style.width = '100%';
-                        img.style.height = 'auto';
-                        img.style.objectFit = 'cover';
-                        img.style.objectPosition = 'top center';
-                        
-                        slot.style.overflow = 'hidden';
-                        slot.style.display = 'flex';
-                        slot.style.alignItems = 'flex-start';
-                        slot.style.justifyContent = 'center';
-                        slot.style.background = 'white';
-                    } else {
-                        img.style.objectFit = 'contain';
-                        img.style.width = '100%';
-                        img.style.height = '100%';
-                    }
                     
                     slot.appendChild(img);
                     pageDiv.appendChild(slot);
                 }
             }
             
+            // 绘制裁剪线
             if (AppState.showCutLines) {
                 for (let col = 1; col < layout.columns; col++) {
                     const lineX = layout.margin + (col * layout.slotWidth) + ((col - 0.5) * layout.spacing);
@@ -542,7 +569,7 @@ function updateModeButtons() {
     }
 }
 
-// ========== 保存PDF ==========
+// ========== 保存PDF（根据布局动态调整） ==========
 async function savePDF() {
     if (!AppState.photoFiles.length) {
         console.warn('savePDF: 没有可导出的文件');
@@ -580,60 +607,61 @@ async function savePDF() {
                     const x = layout.margin + (col * (layout.slotWidth + layout.spacing));
                     const y = layout.margin + (row * (layout.slotHeight + layout.spacing));
                     
-                    if (AppState.currentMode === 9) {
-                        const dimensions = AppState.photoFiles[fileIndex].dimensions;
-                        const imgRatio = dimensions.originalWidth / dimensions.originalHeight;
-                        
-                        let drawWidth = layout.slotWidth;
-                        let drawHeight = layout.slotWidth / imgRatio;
-                        
-                        // If calculated height exceeds slot height, scale to slot height maintaining aspect ratio
-                        if (drawHeight > layout.slotHeight) {
-                            drawHeight = layout.slotHeight;
-                            drawWidth = layout.slotHeight * imgRatio; // This line might be incorrect, should be based on slot width if width is dominant.
-                            // Re-evaluate: if height exceeds, img height needs to be clipped, width should fill slotWidth
-                            // doc.addImage draws the image at the given dimensions.
-                            // To simulate object-fit: cover and object-position: top, we need to crop the image.
-                            // However, jsPDF's addImage does not support direct cropping.
-                            // The current logic simply scales the image to fit *within* the slot while maintaining aspect ratio,
-                            // which is more like object-fit: contain.
-                            // For mode 9, where it's object-fit: cover and top center, a more complex pre-processing on canvas
-                            // would be needed to crop the image *before* passing it to jsPDF.
-                            // For now, retaining the original logic which treats it more like 'contain' or 'fill with potential distortion'
-                            // when aspect ratios don't match. This is a discrepancy from the CSS preview.
-                            // For "9张模式PDF导出完整度保留", implies not cropping, but the CSS crops. This is a conflict.
-                            // I will keep the original JS PDF behavior which seems to try to fit within the slot, possibly with distortion or not filling width fully if aspect is very wide.
-                            // Given "保留图片宽度", it implies width should be slotWidth.
-                            drawWidth = layout.slotWidth;
-                            drawHeight = layout.slotWidth / imgRatio;
-                            // The image will be drawn starting from 'y' but might extend beyond 'y + layout.slotHeight'.
-                            // jsPDF will draw the entire image, it won't clip.
-                            // If `drawHeight` is larger than `layout.slotHeight`, the bottom part will simply extend beyond the slot visually on the PDF, but it's technically drawn.
-                            // This might conflict with the "底部无用信息自动裁剪" in 9-mode if it implies cropping in PDF too.
-                            // Sticking to original's PDF generation logic which does not seem to crop.
-                        }
-                        
+                    const imgInfo = AppState.photoFiles[fileIndex];
+                    const originalRatio = imgInfo.dimensions.originalRatio;
+                    
+                    // 计算图片在槽位中的实际尺寸
+                    // 宽度填满槽位
+                    const drawWidth = layout.slotWidth;
+                    // 高度按原始比例计算
+                    const drawHeight = layout.slotWidth / originalRatio;
+                    
+                    if (drawHeight <= layout.slotHeight) {
+                        // 图片高度小于等于槽位高度：完整显示，底部留白
                         doc.addImage(
-                            AppState.photoFiles[fileIndex].dataUrl,
-                            'JPEG',
-                            x,
-                            y, // Start drawing at the top of the slot
-                            drawWidth,
-                            drawHeight // Draw the calculated height, even if it exceeds slotHeight
-                        );
-                    } else {
-                        doc.addImage(
-                            AppState.photoFiles[fileIndex].dataUrl,
+                            imgInfo.dataUrl,
                             'JPEG',
                             x,
                             y,
-                            layout.slotWidth,
-                            layout.slotHeight
+                            drawWidth,
+                            drawHeight
+                        );
+                        
+                        // 绘制白色矩形填充底部留白区域
+                        if (drawHeight < layout.slotHeight) {
+                            doc.setFillColor(255, 255, 255); // 白色
+                            doc.rect(
+                                x,
+                                y + drawHeight,
+                                drawWidth,
+                                layout.slotHeight - drawHeight,
+                                'F' // 填充模式
+                            );
+                        }
+                    } else {
+                        // 图片高度大于槽位高度：只绘制顶部部分（裁剪底部）
+                        // 计算源图片的裁剪区域（只取顶部部分）
+                        const sourceWidth = imgInfo.dimensions.originalWidth;
+                        const sourceHeight = imgInfo.dimensions.originalHeight;
+                        
+                        // 计算需要裁剪的源图片高度比例
+                        const cropRatio = layout.slotHeight / drawHeight;
+                        const cropHeight = sourceHeight * cropRatio;
+                        
+                        // 使用jsPDF的裁剪功能：只绘制源图片的顶部部分
+                        doc.addImage(
+                            imgInfo.dataUrl,
+                            'JPEG',
+                            0, 0, // 源图片裁剪起始点 (sx, sy)
+                            sourceWidth, cropHeight, // 源图片裁剪尺寸 (sw, sh)
+                            x, y, // 目标位置
+                            drawWidth, layout.slotHeight // 目标尺寸
                         );
                     }
                 }
             }
             
+            // 绘制裁剪线
             if (AppState.showCutLines) {
                 doc.setDrawColor(170, 170, 170);
                 doc.setLineWidth(0.3);

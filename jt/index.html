@@ -2,13 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>手机截图批量打印</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机截图批量打印 - 高效排版工具</title>
+    
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22>🖼️</text></svg>">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="/index.css">
+    <link rel="stylesheet" href="/index.css">
 </head>
+
 <body id="theBody" class="mode-9">
+
     <div class="browser-warning" id="browserWarning">
         <div class="browser-warning-content">
             <div>⚠️ 您的浏览器可能不完全支持所有功能，建议使用 Chrome、Edge 或 Firefox 最新版本</div>
@@ -57,7 +63,7 @@
                 <p><strong>1页6张(纵向)</strong>：A4纸纵向排版，3列×2行，适合标准打印</p>
                 <p><strong>1页9张(纵向)</strong>：A4纸纵向排版，3列×3行，默认推荐，平衡清晰度与效率</p>
                 <p><strong>1页12张(横向)</strong>：A4纸横向排版，6列×2行，最经济高效</p>
-                <p>💡 <strong>9张模式特点</strong>：保留图片宽度，保持原始比例，顶部对齐，【底部】无用信息自动裁剪</p>
+                <p>💡 <strong>9张模式特点</strong>：保留图片宽度，保持原始比例，顶部对齐，底部无用信息自动裁剪</p>
             </div>
             
             <div class="help-section">
@@ -65,78 +71,59 @@
                 <p><strong>作用</strong>：在手机截图间隔中添加参考虚线，帮助打印后精确裁剪</p>
                 <p><strong>显示</strong>：预览时显示橙色虚线，打印时显示浅灰色虚线</p>
                 <p><strong>位置</strong>：在手机截图间隔正中间（4.3mm间距中间）</p>
-                <p>💡 建议开启裁剪线，特别是需要精确裁剪时</p>
             </div>
             
             <div class="help-section">
                 <h3>⚙️ 打印设置</h3>
                 <p><strong>智能方向检测</strong>：根据布局自动设置打印方向</p>
                 <p><strong>固定边距</strong>：页边距和手机截图间距均为4.3mm，确保打印精度</p>
-                <p>💡 1页6张和9张模式自动设置为纵向打印，1页12张模式自动设置为横向打印</p>
             </div>
             
             <div class="help-section">
                 <h3>💾 导出与打印</h3>
-                <p><strong>导出 PDF</strong>：将所有手机截图合并成一个PDF文件保存【9张模式PDF导出完整度保留】</p>
-                <p><strong>立即打印</strong>：直接调用浏览器打印功能，智能提示打印设置</p>
-                <p><strong>清空重置</strong>：清除所有文件，重新开始新任务</p>
+                <p><strong>导出 PDF</strong>：将所有手机截图合并成一个PDF文件保存</p>
+                <p><strong>立即打印</strong>：直接调用浏览器打印功能</p>
             </div>
             
             <div class="help-section">
                 <h3>🎯 使用技巧</h3>
                 <p><strong>最佳实践</strong>：确保手机截图为竖版3:4比例，效果最佳</p>
-                <p><strong>测试打印</strong>：重要手机截图先导出一页测试打印效果</p>
-                <p><strong>裁剪建议</strong>：沿着裁剪线虚线中心裁剪最准确</p>
-                <p><strong>文件列表</strong>：可显示已加载的所有文件名，悬停查看完整名称</p>
-                <p><strong>9张模式优势</strong>：相比6张模式更经济，相比12张模式更清晰，推荐日常使用</p>
+                <p><strong>文件列表</strong>：可显示已加载的所有文件名，支持删除单个文件</p>
             </div>
             
             <div class="help-tip">
-                <strong>💡 温馨提示：</strong> 打印前请确保打印机已连接并有足够纸张。建议先导出一页进行测试打印。
+                <strong>💡 温馨提示：</strong> 打印前请确保打印机已连接。建议先导出一页进行测试打印。
             </div>
             
             <div class="help-section">
                 <h3>⚠️ 重要提示</h3>
                 <p><strong>格式支持</strong>：支持JPG、PNG、WEBP等常见图片格式</p>
-                <p><strong>比例保持</strong>：所有手机截图自动按(3:4)比例缩放，不裁剪</p>
-                <p><strong>浏览器要求</strong>：推荐使用 Chrome、Edge浏览器</p>
                 <p><strong>文件限制</strong>：单次最多处理50个文件，单个文件建议不超过3MB</p>
-                <p><strong>9张模式说明</strong>：图片宽度填满，高度按原始比例缩放，顶部对齐显示，底部超出部分自动裁剪</p>
-            </div>
-            
-            <div class="help-section">
-                <h3>🛠️ 故障排除</h3>
-                <p><strong>文件无法加载</strong>：检查是否为支持的图片格式</p>
-                <p><strong>预览不显示</strong>：尝试清空重置后重新加载</p>
-                <p><strong>打印效果不佳</strong>：检查打印机设置，确保为高质量打印</p>
-                <p><strong>浏览器警告</strong>：建议更换为推荐浏览器</p>
-                <p><strong>9张模式问题</strong>：如遇图片显示异常，请尝试切换其他模式后返回</p>
             </div>
             
             <div class="help-section">
                 <h3>📞 支持与反馈</h3>
                 <p>如有问题或建议，请💬<a href="https://ly.topmer.top" target="_blank" rel="noopener noreferrer">给我留言</a>😉</p>
-                <p>反馈时请注明：遇到的问题、浏览器版本、手机截图数量和大小</p>
             </div>
             
             <div class="help-section">
                 <h3>📄 免责声明</h3>
-                <p>1. 本工具仅处理图片文件，不存储用户数据</p>
-                <p>2. 打印效果受打印机、纸张质量等因素影响</p>
-                <p>3. 建议重要手机截图先测试打印再批量处理</p>
-                <p>4. 请遵守相关版权规定使用手机截图</p>
+                <p>1. 本工具仅处理图片文件，不存储用户数据。2. 打印效果受设备影响。</p>
             </div>
         </div>
     </div>
-    
+
     <div class="main-card">
+        
         <div class="header">
             <h1>手机截图批量排版打印</h1>
             <button class="header-btn home-btn" onclick="goToHomePage()" title="更多工具">🏠</button>
             <button class="header-btn invoice-btn" onclick="openInvoiceTool()" title="发票打印">🧾</button>
             <button class="header-btn help-btn" onclick="showHelp()" title="使用说明">❓</button>
         </div>
+
         <div class="top-layout">
+            
             <div class="drop-zone-container">
                 <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileIn').click()">
                     <div class="upload-icon">📤</div>
@@ -150,13 +137,16 @@
                     <div id="successInfo" class="success-msg"></div>
                     
                     <div class="file-list-container">
-                        <div class="file-list-header">📄 已加载文件 (<span id="fileCount">0</span>)</div>
+                        <div class="file-list-header">
+                            <span>📄 已加载文件 (<span id="fileCount">0</span>)</span>
+                            <button class="continue-add-btn" onclick="continueAddFiles()">+ 继续添加</button>
+                        </div>
                         <div class="file-list-scroll">
                             <div class="file-list" id="fileList"></div>
                         </div>
                     </div>
                     
-                    <div class="reset-hint">💡 处理新的文件前请先点击 "清空重置" 💡</div>
+                    <div class="reset-hint">💡 如需要处理新的文件，请点击 "清空重置" 开始一个新任务。</div>
                 </div>
                 
                 <div class="progress-wrapper" id="progressWrapper">
@@ -190,12 +180,14 @@
         
         <div id="previewGrid"></div>
     </div>
+
     <div class="footer">
         Copyright © 2026 <a href="https://topmer.top/" target="_blank">Topmer</a>
         | v2.3.0 | 💬<a href="https://ly.topmer.top" target="_blank" rel="noopener noreferrer">给我留言</a>
     </div>
     
     <script src="script.js"></script>
-<script type="module" src="/index.tsx"></script>
+    
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
