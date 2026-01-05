@@ -127,30 +127,24 @@ async function handleFiles(files) {
         return;
     }
 
-    // 将新文件与现有文件合并
-    const combinedFiles = [...AppState.originalFiles, ...pdfFiles];
-    
-    // 去重，防止重复添加相同文件
-    const uniqueFiles = combinedFiles.filter((file, index, self) =>
-        index === self.findIndex((f) => (
-            f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
-        ))
-    );
-
-    if (uniqueFiles.length > CONFIG.MAX_FILES) {
-        alert(`最多支持${CONFIG.MAX_FILES}个文件，已自动截取前${CONFIG.MAX_FILES}个`);
-        uniqueFiles.length = CONFIG.MAX_FILES;
-    }
-
-    // 确定真正需要处理的新文件
-    const newFilesToProcess = uniqueFiles.filter(uf => 
-        !AppState.originalFiles.some(of => 
-            of.name === uf.name && of.size === uf.size && of.lastModified === of.lastModified
+    // 去重：只保留不在 AppState.originalFiles 中的新文件
+    const newFilesToProcess = pdfFiles.filter(newFile => 
+        !AppState.originalFiles.some(existingFile => 
+            existingFile.name === newFile.name && 
+            existingFile.size === newFile.size && 
+            existingFile.lastModified === newFile.lastModified
         )
     );
 
-    if (newFilesToProcess.length === 0 && pdfFiles.length > 0) {
+    if (newFilesToProcess.length === 0) {
         alert('所有选择的文件都已在列表中。');
+        return;
+    }
+
+    // 检查总数是否超过限制
+    const totalAfterAdding = AppState.originalFiles.length + newFilesToProcess.length;
+    if (totalAfterAdding > CONFIG.MAX_FILES) {
+        alert(`最多支持${CONFIG.MAX_FILES}个文件，当前已有${AppState.originalFiles.length}个，只能添加${CONFIG.MAX_FILES - AppState.originalFiles.length}个新文件`);
         return;
     }
 
@@ -167,8 +161,10 @@ async function handleFiles(files) {
     try {
         for (let i = 0; i < newFilesToProcess.length; i++) {
             const file = newFilesToProcess[i];
-            const currentIndex = AppState.originalFiles.length + i + 1;
-            progressText.innerText = `解析中 ${currentIndex} / ${uniqueFiles.length}`;
+            const currentIndex = i + 1;
+            const totalNew = newFilesToProcess.length;
+            
+            progressText.innerText = `解析中 ${currentIndex} / ${totalNew}`;
             
             try {
                 const data = await file.arrayBuffer();
@@ -196,7 +192,7 @@ async function handleFiles(files) {
                 AppState.originalFiles.push(file);
                 AppState.invoiceFiles.push(imageData);
                 
-                const progress = Math.round(((AppState.originalFiles.length) / uniqueFiles.length) * 100);
+                const progress = Math.round((currentIndex / totalNew) * 100);
                 progressBar.style.width = `${progress}%`;
                 
                 canvas.width = 0;
@@ -204,7 +200,6 @@ async function handleFiles(files) {
                 
             } catch (error) {
                 console.error(`文件 ${i+1} 处理失败:`, error);
-                // 在这里可以添加UI提示，告知用户哪个文件处理失败
                 continue;
             }
         }
@@ -430,7 +425,7 @@ function goToHomePage() {
 }
 
 function openInvoiceTool() {
-    window.open("https://888.topmer.top/jt", '_blank', 'noopener,noreferrer');
+    window.open("https://888.topmer.top/jt/index.html", '_blank', 'noopener,noreferrer');
 }
 
 // 初始化应用

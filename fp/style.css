@@ -268,12 +268,10 @@ input[type="range"] { width: 100%; cursor: pointer; accent-color: #0066b2; }
         width: 297mm !important;
         height: 209.5mm !important;
     }
-
     /* 7. 精准分页: 只在非最后一页后分页 */
-    .preview-page:not(:last-child) {
-        page-break-after: always !important;
-        break-after: page !important;
-    }
+.preview-page:not(:last-child) {
+    page-break-after: always !important;
+}
 
     /* 8. @page 规则: 通用设置，移除命名页面以解决首页空白问题 */
     @page {
