@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22>🧾</text></svg>">
+    <title>电子发票批量打印</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="./pdfjs/build/jspdf.umd.min.js"></script>
+    <script src="script.js" type="module"></script>
+</head>
+<body id="theBody" class="mode-4">
+    <!-- 浏览器兼容性警告 -->
+    <div class="browser-warning" id="browserWarning">
+        <div class="browser-warning-content">
+            <div>⚠️ 您的浏览器可能不完全支持所有功能，建议使用 Chrome、Edge 或 Firefox 最新版本</div>
+            <button class="browser-warning-close" id="browserWarningClose">×</button>
+        </div>
+    </div>
+    
+    <!-- 打印提示对话框 -->
+    <div class="print-dialog" id="printDialog">
+        <div class="print-dialog-content">
+            <h3>🖨️ 打印设置提示</h3>
+            <p>当前布局模式：<strong id="printModeText">1页4张(横向)</strong></p>
+            <p>请在稍后的打印设置中确认以下事项：(一般无需设置)</p>
+            <p>1. <strong>纸张方向</strong>：设置为 <strong id="printOrientationText">横向</strong></p>
+            <p>2. <strong>纸张大小</strong>：设置为 <strong>A4</strong></p>
+            <p>3. <strong>页边距</strong>：设置为 <strong>无</strong> 或 <strong>最小</strong></p>
+            <p class="print-tip">💡 提示：大多数浏览器会自动检测方向，但建议手动确认一下</p>
+            <div class="print-dialog-buttons">
+                <button class="print-dialog-btn print-dialog-confirm" id="confirmPrint">确认设置并打印</button>
+                <button class="print-dialog-btn print-dialog-cancel" id="cancelPrint">取消打印</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 使用说明弹窗 -->
+    <div class="help-dialog" id="helpDialog">
+        <div class="help-dialog-content">
+            <button class="help-close" id="helpClose">×</button>
+            <h2>📚 使用说明</h2>
+            
+            <div class="help-section">
+                <h3>📋 工具简介</h3>
+                <p>电子发票批量打印助手是一个专为处理 PDF 格式电子发票设计的在线工具，支持将多张发票智能排版到 A4 纸上，实现高效、规范的批量打印。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🚀 快速开始</h3>
+                <p><strong>1. 加载发票文件</strong>：将 PDF 电子发票拖入虚线区域，或点击“点击加载”按钮。加载后，还可以点击“+ 继续添加”补充更多文件。</p>
+                <p><strong>2. 选择打印布局</strong>：根据需要选择“1页2张(纵向)”或“1页4张(横向)”布局。</p>
+                <p><strong>3. 调整打印设置</strong>：按需开关“裁剪线”或调整“边距”。</p>
+                <p><strong>4. 预览与调整</strong>：在下方实时预览排版效果，确认无误。</p>
+                <p><strong>5. 导出与打印</strong>：点击“导出 PDF”保存文件，或点击“立即打印”直接打印。</p>
+            </div>
+
+            <div class="help-section">
+                <h3>🧩 布局选择</h3>
+                <p><strong>1页2张(纵向)</strong>：适合标准A4纸纵向打印，每页放置 2 张发票。</p>
+                <p><strong>1页4张(横向)</strong>：最常用模式，适用于横向 A4 纸，每页可放置 4 张发票，最为节省纸张。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>⚙️ 打印设置</h3>
+                <p><strong>裁剪线</strong>：在页面中央显示虚线，作为裁剪或折叠的参考。可以按需开启或关闭。</p>
+                <p><strong>边距调整</strong>：调节每张发票与纸张边缘/裁剪线之间的距离，范围 **0-10mm**。</p>
+                <p>💡 建议保留默认设置（开启裁剪线，边距 0-2mm）以获得最佳效果。</p>
+            </div>
+
+            <div class="help-section">
+                <h3>💾 导出与打印</h3>
+                <p><strong>导出 PDF</strong>：将所有排版好的发票合并成一个单独的 PDF 文件并下载到本地，该文件已自动设置好正确的纸张方向。</p>
+                <p><strong>立即打印</strong>：直接调用浏览器打印功能。打印前会弹出提示，请根据提示在打印机设置中确认纸张方向（横向/纵向）。</p>
+                <p><strong>清空重置</strong>：清除所有已加载的文件和设置，恢复到初始状态，方便开始新的打印任务。</p>
+            </div>
+
+            <div class="help-section">
+                <h3>✨ 其他功能</h3>
+                <p><strong>手机截图打印 (🖼️)</strong>：点击主界面右上角的“🖼️”按钮，会打开一个专门用于打印手机截图（如行程卡、健康码）的页面。这是一个为方便特定场景设计的独立功能。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🎯 使用技巧</h3>
+                <p><strong>文件列表管理</strong>：文件加载后，列表中会显示所有文件名。您可以点击每个文件右侧的“×”按钮，单独将其从待打印列表中移除。</p>
+                <p><strong>测试打印</strong>：对于重要或大量的打印任务，强烈建议先导出一页进行测试打印，以确保最终效果符合预期。</p>
+            </div>
+            
+            <div class="help-tip">
+                <strong>💡 温馨提示：</strong> 打印前请确保打印机已正确连接并有足够的 A4 纸。
+            </div>
+            
+            <div class="help-section">
+                <h3>⚠️ 重要提示</h3>
+                <p><strong>格式限制</strong>：仅支持 **PDF** 格式的电子发票，不支持 OFD、JPG、PNG 等其他格式。</p>
+                <p><strong>浏览器要求</strong>：为确保所有功能正常，强烈推荐使用 **Chrome、Edge、Firefox** 的最新版本。</p>
+                <p><strong>文件限制</strong>：为保证浏览器稳定运行，建议单次处理不超过 **50** 个文件。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>🛠️ 故障排除</h3>
+                <p><strong>文件无法加载</strong>：请检查文件是否为 PDF 格式且未损坏。</p>
+                <p><strong>预览不显示</strong>：请尝试点击“清空重置”按钮后，重新加载文件。</p>
+                <p><strong>打印效果不佳</strong>：尝试调整“边距”设置，并在打印机选项中检查是否已取消“页边距”。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>📞 支持与反馈</h3>
+                <p>如有问题或建议，请💬<a href=\"https://ly.topmer.top\" target=\"_blank\" rel=\"noopener noreferrer\">给我留言</a>😉</p>
+                <p>反馈时请尽量提供：遇到的问题描述、您的浏览器版本、以及处理的文件数量。</p>
+            </div>
+            
+            <div class="help-section">
+                <h3>📄 免责声明</h3>
+                <p>1. 本工具完全在您的浏览器本地运行，我们不上传、不存储您的任何文件数据，确保隐私安全。</p>
+                <p>2. 最终打印效果可能受您的打印机型号、驱动及纸张质量等多种因素影响。</p>
+                <p>3. 请遵守国家相关财务和税务规定来使用电子发票及其打印件。</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-card">
+        <div class="header">
+            <h1>电子发票批量打印助手</h1>
+            <button class="home-btn" id="homeBtn" title="返回主页">🏠</button>
+            <button class="invoice-btn" id="invoiceBtn" title="手机截图打印">🖼️</button>
+            <button class="help-btn" id="helpBtn">❓</button>
+        </div>
+        
+        <div class="top-layout">
+            <div class="drop-zone-container">
+                <div id="dropZone" class="drop-zone">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">将 PDF 电子发票拖入此处</div>
+                    <div class="upload-subtext">或 <span>点击加载</span> (支持多选)</div>
+                    <div class="upload-limit">✨ 目前仅支持 PDF 格式标注电子发票,每次最多处理50张 ✨</div>
+                    <input type="file" id="fileIn" accept="application/pdf" multiple style="display:none;">
+                </div>
+                
+                <div id="feedbackArea" class="drop-zone">
+                    <div id="successInfo" class="success-msg"></div>
+                    
+                    <!-- 文件列表区域 -->
+                    <div class="file-list-container">
+                        <div class="file-list-header">
+                            <span>📄 已加载文件 (<span id="fileCount">0</span>)</span>
+                            <button id="addMoreFilesBtn" class="btn-add-more" title="继续添加文件">+ 继续添加</button>
+                        </div>
+                        <div class="file-list-scroll">
+                            <div class="file-list" id="fileList"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="reset-hint">💡 如需要处理新的文件，请点击“清空重置”开始一个新任务。</div>
+                </div>
+                
+                <div class="progress-wrapper" id="progressWrapper">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <div class="progress-text" id="progressText">0 / 0</div>
+                </div>
+            </div>
+
+            <div class="settings-panel">
+                <div class="setting-unit">
+                    <div class="unit-header">✂️ 裁剪线</div>
+                    <button id="lineToggle" class="toggle-btn btn-on">已开启</button>
+                </div>
+                
+                <div class="setting-unit">
+                    <div class="unit-header">📏 边距：<b id="marginVal">2</b>mm</div>
+                    <input type="range" min="0" max="10" value="2" id="marginRange">
+                </div>
+                
+                <div class="setting-unit unit-full">
+                    <div class="unit-header">🧩 布局选择</div>
+                    <div class="mode-group">
+                        <button id="m2" class="btn-mode">1页2张(纵向)</button>
+                        <button id="m4" class="btn-mode active">1页4张(横向)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button id="exportBtn" class="btn-large btn-pdf" disabled>💾 导出 PDF</button>
+            <button id="printBtn" class="btn-large btn-print" disabled>🖨️ 立即打印</button>
+            <button id="resetBtn" class="btn-large btn-reset">🧹 清空重置</button>
+        </div>
+        
+        <div id="previewGrid"></div>
+    </div>
+    <div class="footer">
+        Copyright © <span id="copyright-year"></span> <a href="https://topmer.top" target="_blank">Topmer</a>
+        | v2.2.0 |  💬<a href="https://ly.topmer.top" target="_blank" rel="noopener noreferrer">给我留言</a> 
+    </div>
+</body>
+</html>
