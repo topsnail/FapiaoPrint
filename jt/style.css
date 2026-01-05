@@ -1,3 +1,17 @@
+/* 
+CSS变量定义模块：定义全局变量，用于颜色、尺寸、阴影等。
+- 功能：便于统一管理和修改主题。
+- 可修改项：
+  - 动画速度：--animation-bg-speed: 20s; - 调整背景渐变动画时长。
+  - 颜色：--color-primary: #4a6d7c; - 主色，可改为其他十六进制值。
+  - 透明度：--opacity-light: 0.3; - 调整透明度（0-1）。
+  - 尺寸：--border-radius-small: 4px; - 小圆角半径，可增大为更圆润效果。
+  - 间距：--spacing-xs: 2px; - 最小间距，可统一调整布局松紧。
+  - 阴影：--shadow-light: 0 4px 12px rgba(0,0,0,0.2); - 调整偏移、模糊、颜色不透明度。
+  - 字体大小：--font-size-xs: 9px; - 小字体，可增大以改善可读性。
+  - 过渡：--transition-fast: 0.1s ease; - 调整动画时长和缓动函数。
+*/
+
 /* ========== CSS变量定义 ========== */
 :root {
     /* 背景动画 */
@@ -55,12 +69,31 @@
     --transition-slow: 0.8s ease;
 }
 
+/* 
+基础重置模块：重置浏览器默认样式，确保一致性。
+- 功能：清除边距、填充，使用border-box。
+- 可修改项：
+  - 无特定变量，可添加更多选择器如html, body等。
+*/
+
 /* ========== 基础重置 ========== */
 * { 
     margin: 0; 
     padding: 0; 
     box-sizing: border-box; 
 }
+
+/* 
+主体样式模块：body元素的整体布局和背景。
+- 功能：设置字体、背景渐变动画、居中布局。
+- 可修改项：
+  - 字体族：font-family - 添加更多字体fallback。
+  - 背景渐变：linear-gradient颜色，可调整角度-45deg或颜色停点。
+  - 背景大小：background-size: 400% 400%; - 调整动画范围。
+  - 动画：animation时长var(--animation-bg-speed)，可改为linear。
+  - 填充：padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-xl); - 调整页面边距。
+  - 过渡：transition: all var(--transition-fast); - 调整时长。
+*/
 
 /* ========== 主体样式 ========== */
 body {
@@ -95,6 +128,19 @@ body.mode-12 { }
     100% { background-position: 0% 50%; } 
 }
 
+/* 
+主卡片样式模块：主要内容容器。
+- 功能：设置宽度、背景、模糊效果、阴影。
+- 可修改项：
+  - 最大宽度：max-width: 1050px; - 调整以适应不同屏幕。
+  - 背景：rgba(235, 230, 230, 0.75); - 更改颜色或透明度。
+  - 模糊：backdrop-filter: blur(15px); - 调整模糊半径。
+  - 圆角：border-radius: var(--border-radius-large); - 统一调整。
+  - 填充：padding: 40px; - 增大以增加内部空间。
+  - 阴影：box-shadow: var(--shadow-heavy); - 调整强度。
+  - 过渡：transition: all var(--transition-fast); - 调整时长。
+*/
+
 /* ========== 主卡片样式 ========== */
 .main-card {
     width: 100%; 
@@ -106,6 +152,13 @@ body.mode-12 { }
     box-shadow: var(--shadow-heavy);
     transition: all var(--transition-fast);
 }
+
+/* 
+头部样式模块：标题和按钮容器。
+- 功能：居中标题，定位按钮。
+- 可修改项：
+  - 布局：display: flex; - 可改为grid以更灵活定位。
+*/
 
 /* ========== 头部样式 ========== */
 .header { 
@@ -178,6 +231,14 @@ body.mode-12 { }
     font-size: 18px !important;
 }
 
+/* 
+顶部布局模块：上传区和设置面板容器。
+- 功能：flex布局，调整间隙。
+- 可修改项：
+  - 间隙：gap: var(--spacing-lg); - 调整组件间距。
+  - 上边距：margin-top: 8px; - 具体值，可改为变量。
+*/
+
 /* ========== 顶部布局 ========== */
 .top-layout { 
     display: flex; 
@@ -186,6 +247,14 @@ body.mode-12 { }
     margin-bottom: var(--spacing-sm); 
     align-items: stretch; 
 }
+
+/* 
+拖拽区域容器模块：文件上传区。
+- 功能：列布局，包含拖拽区、反馈、进度。
+- 可修改项：
+  - 弹性：flex: 1.2; - 调整占比。
+  - 间隙：gap: var(--spacing-sm); - 组件间距。
+*/
 
 /* ========== 拖拽区域容器 ========== */
 .drop-zone-container { 
@@ -265,6 +334,13 @@ body.mode-12 { }
     font-weight: 500; 
     margin-top: var(--spacing-xs);
 }
+
+/* 
+文件列表容器模块：显示已加载文件。
+- 功能：头部、滚动列表。
+- 可修改项：
+  - 边距：margin: var(--spacing-md) 0; - 调整垂直间距。
+*/
 
 /* ========== 文件列表容器样式 ========== */
 .file-list-container {
@@ -367,24 +443,6 @@ body.mode-12 { }
     transform: scale(1.1);
 }
 
-/* 文件名悬停提示 */
-.file-item:hover::after {
-    content: attr(title);
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: rgba(0, 0, 0, 0.85);
-    color: var(--color-white);
-    padding: 6px 10px;
-    border-radius: var(--border-radius-small);
-    font-size: 11px;
-    white-space: normal;
-    max-width: 300px;
-    z-index: 100;
-    pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
 /* 确保滚动条在内容少时也显示 */
 .file-list-scroll::-webkit-scrollbar {
     width: 8px !important;
@@ -409,6 +467,16 @@ body.mode-12 { }
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
 }
+
+/* 
+进度条样式模块：文件处理进度显示。
+- 功能：条形进度和文本叠加。
+- 可修改项：
+  - 高度：height: 24px; - 调整大小。
+  - 背景：background: rgba(0, 0, 0, 0.1); - 更改颜色。
+  - 进度条渐变：linear-gradient(90deg, #77b282, #429852, #0c7820); - 调整颜色停点。
+  - 文本：font-size: var(--font-size-sm); - 调整大小、颜色。
+*/
 
 /* ========== 进度条样式 ========== */
 .progress-wrapper { 
@@ -441,6 +509,14 @@ body.mode-12 { }
     color: var(--color-white); 
     pointer-events: none; 
 }
+
+/* 
+设置面板模块：配置选项容器。
+- 功能：网格布局设置单元。
+- 可修改项：
+  - 网格列：grid-template-columns: 1fr 1fr; - 调整列数。
+  - 间隙：gap: 10px; - 单元间距。
+*/
 
 /* ========== 设置面板 ========== */
 .settings-panel { 
@@ -477,6 +553,16 @@ body.mode-12 { }
     color: var(--color-dark-gray); 
     margin-bottom: var(--spacing-md); 
 }
+
+/* 
+按钮样式模块：开关、模式、工具栏按钮。
+- 功能：开关、模式、工具栏按钮。
+- 可修改项：
+  - 开关按钮宽度：width: 70%; - 调整占比。
+  - 模式按钮大小：width: 100px; height: 35px; - 统一调整。
+  - 组间隙：gap: var(--spacing-xl); - 垂直间距。
+  - 大按钮高度：height: 52px; - 调整大小。
+*/
 
 /* ========== 按钮样式 ========== */
 /* 裁剪线开关按钮 */
@@ -539,6 +625,14 @@ body.mode-12 { }
     border-color: var(--color-primary); 
 }
 
+/* 
+工具栏模块：导出、打印、重置按钮容器。
+- 功能：flex布局按钮。
+- 可修改项：
+  - 间隙：gap: var(--spacing-xl); - 按钮间距。
+  - 上边距：margin-top: var(--spacing-xl); - 调整位置。
+*/
+
 /* ========== 工具栏 ========== */
 .toolbar { 
     display: flex; 
@@ -593,6 +687,15 @@ body.mode-12 { }
     border-color: #94a3b8;
 }
 
+/* 
+预览网格模块：显示布局预览。
+- 功能：网格布局页面。
+- 可修改项：
+  - 列：grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); - 调整最小宽度。
+  - 间隙：gap: var(--spacing-xl); - 页面间距。
+  - 上边距：margin-top: var(--spacing-xl); - 调整位置。
+*/
+
 /* ========== 预览网格 ========== */
 #previewGrid { 
     display: grid; 
@@ -625,6 +728,15 @@ body.mode-12 { }
 .h-page { 
     aspect-ratio: 297/210; 
 }
+
+/* 
+槽位和图片样式模块：图片容器和显示。
+- 功能：统一槽位和图片行为。
+- 可修改项：
+  - 槽位背景：background: var(--color-white); - 调整留白颜色。
+  - 图片对象拟合：object-fit: cover; - 改为contain以完整显示。
+  - 对象位置：object-position: top center; - 调整对齐。
+*/
 
 /* ========== 槽位样式 - 统一所有模式 ========== */
 .slot { 
@@ -700,6 +812,13 @@ body.mode-12 .slot img {
     background: var(--color-white) !important;
 }
 
+/* 
+裁剪线样式模块：虚线参考线。
+- 功能：垂直和水平线。
+- 可修改项：
+  - 边框：border-left: 0.5px dashed var(--color-danger); - 调整粗细、颜色、dashed间距。
+*/
+
 /* ========== 裁剪线样式 ========== */
 .cut-line {
     position: absolute;
@@ -716,6 +835,15 @@ body.mode-12 .slot img {
     border-top: 0.5px dashed var(--color-danger);
     width: 100%;
 }
+
+/* 
+浏览器兼容性警告模块：顶部警告条。
+- 功能：显示不支持提示。
+- 可修改项：
+  - 背景：background: #ffcc00; - 调整警告颜色。
+  - 填充：padding: 10px 15px; - 调整高度。
+  - 阴影：box-shadow: 0 2px 10px rgba(0,0,0,0.1); - 调整强度。
+*/
 
 /* ========== 浏览器兼容性警告 ========== */
 .browser-warning {
@@ -750,6 +878,15 @@ body.mode-12 .slot img {
     color: #333;
     padding: 0 10px;
 }
+
+/* 
+打印相关样式模块：媒体查询，确保打印输出正确。
+- 功能：隐藏非打印元素，调整页面大小、方向。
+- 可修改项：
+  - 页面大小：width: 210mm !important; height: 297mm !important; - 调整为其他纸张。
+  - 裁剪线：border-left: 0.3mm dashed #AAAAAA; - 调整打印线粗细、颜色。
+  - @page margin: 0; - 无边距打印。
+*/
 
 /* ========== 打印相关样式 ========== */
 @media print {
@@ -993,6 +1130,16 @@ body.mode-12 .slot img {
     }
 }
 
+/* 
+弹窗样式模块：打印和帮助对话框。
+- 功能：固定位置、居中显示。
+- 可修改项：
+  - 背景：background: rgba(0, 0, 0, 0.7); - 调整叠加层透明度。
+  - 内容填充：padding: 30px; - 调整内部空间。
+  - 最大宽度：max-width: 500px; - 调整弹窗大小。
+  - 按钮背景：background: var(--color-secondary); - 调整颜色。
+*/
+
 /* ========== 弹窗样式 ========== */
 /* 打印对话框 */
 .print-dialog {
@@ -1026,7 +1173,7 @@ body.mode-12 .slot img {
 
 .print-dialog p {
     color: #576574;
-    margin-bottom: 10px;
+    margin: 5px 0;
     line-height: 1.5;
 }
 
@@ -1162,6 +1309,15 @@ body.mode-12 .slot img {
     font-size: var(--font-size-md);
 }
 
+/* 
+底部样式模块：版权和链接。
+- 功能：居中文本，链接样式。
+- 可修改项：
+  - 填充：padding: 15px 0; - 调整高度。
+  - 颜色：color: var(--color-medium-gray); - 调整文本色。
+  - 上边距：margin-top: var(--spacing-xl); - 调整位置。
+*/
+
 /* ========== 底部样式 ========== */
 .footer {
     width: 100%;
@@ -1185,8 +1341,58 @@ body.mode-12 .slot img {
     text-decoration: underline;
 }
 
+/* 
+响应式调整模块：媒体查询，适应小屏。
+- 功能：调整字体、宽度等。
+- 可修改项：
+  - 断点：@media (max-width: 768px) - 调整为其他宽度如1024px。
+  - 文件名宽度：max-width: 120px; - 调整截断点。
+  - 按钮高度：height: 30px; - 小屏优化。
+*/
+
 /* ========== 响应式调整 ========== */
 @media (max-width: 768px) {
+    body {
+        padding: var(--spacing-sm);
+    }
+
+    .main-card {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: var(--font-size-xl);
+    }
+
+    .top-layout {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .drop-zone {
+        padding: 15px;
+    }
+
+    .upload-icon {
+        font-size: 30px;
+    }
+
+    .upload-text {
+        font-size: var(--font-size-md);
+    }
+
+    .upload-subtext {
+        font-size: var(--font-size-sm);
+    }
+
+    .upload-limit {
+        font-size: var(--font-size-xs);
+    }
+
+    .file-list-scroll {
+        max-height: 150px;
+    }
+
     .file-name {
         max-width: 120px;
         font-size: 11px;
@@ -1197,14 +1403,46 @@ body.mode-12 .slot img {
         width: 18px;
         height: 18px;
     }
-    
+
+    .settings-panel {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .setting-unit {
+        padding: 10px;
+    }
+
+    .mode-group {
+        gap: 8px;
+    }
+
+    .btn-mode {
+        height: 30px;
+        font-size: 13px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-large {
+        height: 45px;
+        font-size: 16px;
+    }
+
+    #previewGrid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
     .help-dialog-content {
         padding: var(--spacing-xl);
         max-height: 85vh;
-    }
-    
-    .header h1 {
-        font-size: var(--font-size-xl);
+        width: 95%;
     }
     
     /* 移动端保留修改后的尺寸 */
@@ -1212,11 +1450,6 @@ body.mode-12 .slot img {
         width: 36px !important;
         height: 36px !important;
         font-size: 18px !important;
-    }
-    
-    #previewGrid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 15px;
     }
     
     /* 移动端保留修改后的尺寸 */
@@ -1234,10 +1467,15 @@ body.mode-12 .slot img {
         font-size: 18px !important;
         right: 42px !important;
     }
-    
-    /* 响应式调整模式按钮高度 */
-    .btn-mode {
-        height: 30px;
-        font-size: 13px;
+
+    .print-dialog-content {
+        padding: 20px;
+        width: 95%;
+    }
+
+    .footer {
+        padding: 10px 0;
+        font-size: var(--font-size-sm);
+        margin-top: 15px;
     }
 }

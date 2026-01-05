@@ -1,5 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
+<!-- 
+头部模块：包含页面元数据、标题、图标、外部脚本和样式链接。
+- 可修改项：
+  - 标题：<title>标签内的文本，可更改页面标题。
+  - 图标：link rel="icon" 的 href，可替换为其他图标数据或URL。
+  - 脚本：script src，可更新jsPDF库版本或路径（注意兼容性）。
+  - 样式：link rel="stylesheet" 的 href，可调整CSS文件路径或添加新样式表。
+  - 字符集和视口：meta标签，确保UTF-8和响应式设计，无需修改除非特殊需求。
+-->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +24,24 @@
     <link rel="stylesheet" href="/index.css">
 </head>
 
+<!-- 
+主体模块：页面主要内容容器，使用id="theBody" class="mode-9"定义默认布局模式。
+- 可修改项：
+  - class="mode-9"：可更改为其他模式类（如mode-6或mode-12），影响布局样式（需对应CSS调整）。
+  - id="theBody"：用于JS引用，可保持不变。
+  - 整体背景/颜色：在CSS中调整body选择器，如背景色、字体大小等。
+-->
+
 <body id="theBody" class="mode-9">
+
+    <!-- 
+    浏览器警告模块：显示浏览器兼容性警告，支持关闭按钮。
+    - 功能：当浏览器不支持某些功能时显示提示。
+    - 可修改项：
+      - 内容文本：div内的文本，可更改警告消息。
+      - 样式类：class="browser-warning" 和 "browser-warning-content"，在CSS中调整颜色（如背景色）、间距（padding/margin）、字体大小。
+      - 关闭按钮：onclick="closeBrowserWarning()"，确保JS函数存在；按钮样式class="browser-warning-close"，可改大小、颜色。
+    -->
 
     <div class="browser-warning" id="browserWarning">
         <div class="browser-warning-content">
@@ -22,6 +50,16 @@
         </div>
     </div>
     
+    <!-- 
+    打印对话框模块：打印设置提示弹窗，包括布局信息和按钮。
+    - 功能：打印前确认设置，如纸张方向、大小、边距。
+    - 可修改项：
+      - 标题和文本：h3和p标签内容，可更改提示文字。
+      - 动态元素：id="printModeText"、"printOrientationText"，由JS填充，可在CSS调整字体粗细、颜色。
+      - 按钮：class="print-dialog-btn print-dialog-confirm/cancel"，在CSS中改颜色、间距、大小；onclick事件确保JS函数匹配。
+      - 整体样式：class="print-dialog" 和 "print-dialog-content"，调整弹窗位置、背景色、阴影等。
+    -->
+
     <div class="print-dialog" id="printDialog">
         <div class="print-dialog-content">
             <h3>🖨️ 打印设置提示</h3>
@@ -39,6 +77,16 @@
         </div>
     </div>
     
+    <!-- 
+    帮助对话框模块：使用说明弹窗，包含多个部分的内容。
+    - 功能：提供工具简介、操作步骤、技巧等，带关闭按钮。
+    - 可修改项：
+      - 内容结构：h2、h3、p标签，可添加/修改文本、链接。
+      - 链接：a href，如"https://ly.topmer.top"，可更改目标URL。
+      - 样式类：class="help-dialog"、"help-dialog-content"、"help-section"等，在CSS中调整间距（gap/padding）、颜色、字体大小。
+      - 关闭按钮：onclick="closeHelp()"，确保JS函数；class="help-close"，改大小/颜色。
+    -->
+
     <div class="help-dialog" id="helpDialog">
         <div class="help-dialog-content">
             <button class="help-close" onclick="closeHelp()">×</button>
@@ -113,8 +161,24 @@
         </div>
     </div>
 
+    <!-- 
+    主卡片模块：页面核心内容容器，包括头部、上传区、设置面板、工具栏和预览网格。
+    - 功能：整合所有交互元素。
+    - 可修改项：
+      - 整体样式：class="main-card"，在CSS中调整宽度、边框、背景色、间距（padding/margin）。
+    -->
+
     <div class="main-card">
         
+        <!-- 
+        头部子模块：标题和功能按钮。
+        - 功能：显示标题，提供导航按钮。
+        - 可修改项：
+          - 标题：h1标签文本，可更改工具名称。
+          - 按钮：class="header-btn" 子类如home-btn、invoice-btn、help-btn，在CSS调整大小、颜色、间距；onclick事件确保JS函数（如goToHomePage()）。
+          - title属性：鼠标悬停提示，可修改文本。
+        -->
+
         <div class="header">
             <h1>手机截图批量排版打印</h1>
             <button class="header-btn home-btn" onclick="goToHomePage()" title="更多工具">🏠</button>
@@ -122,8 +186,26 @@
             <button class="header-btn help-btn" onclick="showHelp()" title="使用说明">❓</button>
         </div>
 
+        <!-- 
+        顶部布局子模块：包含文件拖拽区和设置面板。
+        - 功能：文件上传和布局配置。
+        - 可修改项：
+          - 样式：class="top-layout"，在CSS调整flex布局、间距。
+        -->
+
         <div class="top-layout">
             
+            <!-- 
+            文件上传容器子模块：拖拽区、反馈区、进度条。
+            - 功能：处理文件上传、显示列表和进度。
+            - 可修改项：
+              - 拖拽区：id="dropZone" class="drop-zone"，在CSS调整边框颜色（虚线）、图标大小、文本颜色、间距。
+              - 输入：input type="file" accept，可添加更多图片格式。
+              - 反馈区：id="feedbackArea"，class="drop-zone"，调整成功消息颜色、文件列表高度。
+              - 文件列表：id="fileList"，在CSS改滚动条样式、项间距。
+              - 进度条：id="progressWrapper"，class="progress-wrapper"，调整颜色、宽度、高度。
+            -->
+
             <div class="drop-zone-container">
                 <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileIn').click()">
                     <div class="upload-icon">📤</div>
@@ -155,6 +237,16 @@
                 </div>
             </div>
 
+            <!-- 
+            设置面板子模块：裁剪线开关和布局选择按钮。
+            - 功能：配置打印选项。
+            - 可修改项：
+              - 单元样式：class="setting-unit" 和 "unit-full"，调整间距、背景。
+              - 开关按钮：id="cutLineToggle" class="toggle-btn btn-on"，在CSS改颜色（开启/关闭状态）、大小。
+              - 布局按钮：id="m6/m9/m12" class="btn-mode"，active类表示选中，在CSS调整颜色、间距、字体。
+              - 按钮组：style="flex-direction: column; gap: 10px;"，可改gap值为调整按钮间距。
+            -->
+
             <div class="settings-panel">
                 <div class="setting-unit">
                     <div class="unit-header">✂️ 裁剪线</div>
@@ -172,20 +264,52 @@
             </div>
         </div>
 
+        <!-- 
+        工具栏子模块：导出、打印和重置按钮。
+        - 功能：触发PDF导出、打印和应用重置。
+        - 可修改项：
+          - 按钮：class="btn-large btn-pdf/print/reset"，在CSS调整颜色、大小、间距；disabled属性由JS控制。
+          - onclick事件：确保JS函数如savePDF()存在。
+        -->
+
         <div class="toolbar">
             <button id="exportBtn" class="btn-large btn-pdf" disabled onclick="savePDF()">💾 导出 PDF</button>
             <button id="printBtn" class="btn-large btn-print" disabled onclick="showPrintDialog()">🖨️ 立即打印</button>
             <button class="btn-large btn-reset" onclick="resetApp()">🧹 清空重置</button>
         </div>
         
+        <!-- 
+        预览网格子模块：显示排版预览。
+        - 功能：渲染上传图片的布局预览。
+        - 可修改项：
+          - id="previewGrid"：用于JS动态填充，在CSS调整网格布局、间距、边框。
+        -->
+
         <div id="previewGrid"></div>
     </div>
+
+    <!-- 
+    页脚模块：版权信息和链接。
+    - 功能：显示版权和反馈链接。
+    - 可修改项：
+      - 文本：Copyright © 2026，可更新年份。
+      - 链接：a href，可更改URL。
+      - 样式：class="footer"，在CSS调整位置、颜色、字体大小、间距。
+    -->
 
     <div class="footer">
         Copyright © 2026 <a href="https://topmer.top/" target="_blank">Topmer</a>
         | v2.3.0 | 💬<a href="https://ly.topmer.top" target="_blank" rel="noopener noreferrer">给我留言</a>
     </div>
     
+    <!-- 
+    脚本加载模块：引入外部JS文件。
+    - 功能：加载核心脚本和模块。
+    - 可修改项：
+      - src路径：可更新文件路径或版本。
+      - type="module"：用于ES模块，确保浏览器支持。
+    -->
+
     <script src="script.js"></script>
     
     <script type="module" src="/index.tsx"></script>

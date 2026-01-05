@@ -1,3 +1,13 @@
+/* 
+导航功能模块：处理页面导航和外部工具打开。
+- 功能：返回首页和打开发票工具。
+- 可修改项：
+  - 首页URL：const homeUrl = "https://888.topmer.top"; 可更改为其他首页地址。
+  - 发票工具URL：const invoiceUrl = "https://888.topmer.top/fp"; 可更改为其他工具地址。
+  - 错误消息：alert中的文本，可自定义提示语。
+  - 日志输出：在console.error中，可添加更多调试信息。
+*/
+
 // ========== 导航功能 ==========
 function goToHomePage() {
     try {
@@ -19,6 +29,18 @@ function openInvoiceTool() {
     }
 }
 
+/* 
+应用配置模块：定义常量参数，用于布局计算和文件处理。
+- 功能：设置图像质量、边距、间距、目标尺寸等。
+- 可修改项：
+  - IMAGE_QUALITY: 0.9 - 图像压缩质量（0-1），调整以平衡文件大小和清晰度。
+  - MARGIN_MM: 4.3 - 页边距（mm），修改会影响整体布局间距，在CSS中相应调整.preview-page的padding。
+  - SPACING_MM: 4.3 - 图片间距（mm），修改后需测试预览网格的显示。
+  - TARGET_WIDTH/HEIGHT: 1080/1440 - 目标图片尺寸，保持3:4比例，修改时更新TARGET_RATIO。
+  - MAX_FILES: 50 - 最大文件数，增加可能影响性能。
+  - MM_TO_PX: 96 / 25.4 - 毫米到像素转换率，根据DPI调整（默认96DPI）。
+*/
+
 // ========== 应用配置 ==========
 const CONFIG = {
     IMAGE_QUALITY: 0.9,
@@ -31,6 +53,15 @@ const CONFIG = {
     MM_TO_PX: 96 / 25.4 // 1mm = 3.779527559055118像素（96DPI）
 };
 
+/* 
+应用状态模块：存储全局状态变量。
+- 功能：管理文件列表、模式、裁剪线等状态。
+- 可修改项：
+  - currentMode: 9 - 默认模式，可改为6或12。
+  - showCutLines: true - 默认开启裁剪线，可设为false。
+  - 数组初始化：photoFiles等，可添加更多属性以扩展功能。
+*/
+
 // ========== 应用状态 ==========
 const AppState = {
     photoFiles: [], // 存储处理后的手机截图数据 {dataUrl, originalName, dimensions}
@@ -42,6 +73,16 @@ const AppState = {
 };
 
 const { jsPDF } = window.jspdf;
+
+/* 
+核心计算函数模块：根据模式计算布局参数。
+- 功能：返回布局对象，包括列、行、尺寸等。
+- 可修改项：
+  - A4尺寸：A4_WIDTH_MM: 210, A4_HEIGHT_MM: 297 - 可调整为其他纸张大小，如Letter。
+  - 列/行配置：在if条件中修改columns/rows，会影响photosPerPage。
+  - 错误处理：throw new Error消息，可自定义。
+  - 横向模式：交换pageWidth/pageHeight。
+*/
 
 // ========== 核心计算函数 ==========
 function calculateLayout(mode) {
@@ -136,6 +177,15 @@ function calculateLayout(mode) {
     }
 }
 
+/* 
+裁剪线功能模块：切换裁剪线显示状态。
+- 功能：更新按钮文本和类，重新渲染预览。
+- 可修改项：
+  - 按钮文本：'已开启' / '已关闭' - 可更改为其他状态描述。
+  - 类名：'btn-on' / 'btn-off' - 在CSS中调整颜色、背景等。
+  - id: 'cutLineToggle' - 确保与HTML匹配。
+*/
+
 // ========== 裁剪线功能 ==========
 function toggleCutLines() {
     AppState.showCutLines = !AppState.showCutLines;
@@ -148,6 +198,15 @@ function toggleCutLines() {
     
     renderPreview();
 }
+
+/* 
+浏览器兼容性检测模块：检查必要API支持。
+- 功能：检测并显示警告。
+- 可修改项：
+  - missingAPIs列表：可添加更多API检查，如window.CanvasRenderingContext2D。
+  - 警告显示：id 'browserWarning' style.display，在CSS调整警告框颜色、间距。
+  - 日志：console.warn消息，可自定义。
+*/
 
 // ========== 浏览器兼容性检测 ==========
 function checkBrowserCompatibility() {
@@ -171,6 +230,14 @@ function closeBrowserWarning() {
     document.getElementById('browserWarning').style.display = 'none';
 }
 
+/* 
+使用说明弹窗功能模块：显示和关闭帮助对话框。
+- 功能：控制帮助弹窗可见性。
+- 可修改项：
+  - id: 'helpDialog' style.display - 在CSS调整弹窗背景色、padding、宽度。
+  - 错误日志：console.error消息，可添加更多细节。
+*/
+
 // ========== 使用说明弹窗功能 ==========
 function showHelp() {
     try {
@@ -188,10 +255,26 @@ function closeHelp() {
     }
 }
 
+/* 
+继续添加文件功能模块：触发文件输入点击。
+- 功能：允许继续选择文件。
+- 可修改项：
+  - id: 'fileIn' - 确保与HTML输入匹配。
+*/
+
 // ========== 继续添加文件功能 ==========
 function continueAddFiles() {
     document.getElementById('fileIn').click();
 }
+
+/* 
+删除单个文件模块：从状态中移除文件并更新UI。
+- 功能：删除指定索引文件，更新列表和预览。
+- 可修改项：
+  - 成功信息文本：successInfo.innerText - 可自定义加载成功消息。
+  - id: 'successInfo', 'dropZone' 等 - 在CSS调整颜色、间距。
+  - 如果文件为空时的显示：style.display，在CSS改过渡效果。
+*/
 
 // ========== 删除单个文件 ==========
 function deleteFile(index) {
@@ -241,6 +324,15 @@ function deleteFile(index) {
     }
 }
 
+/* 
+文件列表更新函数模块：渲染文件列表UI。
+- 功能：更新文件计数和列表HTML。
+- 可修改项：
+  - 显示名称截断：30字符 - 可调整为其他长度。
+  - HTML模板：class 'file-item', 'file-name', 'file-delete' - 在CSS调整颜色、间距、字体大小。
+  - title属性：鼠标悬停提示，可添加更多信息。
+*/
+
 // ========== 文件列表更新函数 ==========
 function updateFileList(files) {
     try {
@@ -278,6 +370,14 @@ function updateFileList(files) {
     }
 }
 
+/* 
+处理单张图片模块：读取文件并获取信息，不进行裁剪。
+- 功能：返回图片数据URL和尺寸。
+- 可修改项：
+  - 支持格式：在processImageFile中，可添加更多错误处理。
+  - resolve对象：可添加更多图片属性，如旋转信息。
+*/
+
 // ========== 处理单张图片（保留原始比例） ==========
 async function processImageFile(file) {
     return new Promise((resolve, reject) => {
@@ -314,6 +414,16 @@ async function processImageFile(file) {
         reader.readAsDataURL(file);
     });
 }
+
+/* 
+处理多个文件模块：过滤、处理文件并更新UI。
+- 功能：异步处理图片，显示进度。
+- 可修改项：
+  - 支持类型：['image/jpeg', ...] - 可添加更多MIME类型。
+  - 警报消息：alert文本，可自定义。
+  - 进度条：style.width、innerText - 在CSS调整进度条颜色、高度。
+  - 最大文件检查：remainingSlots计算，可调整逻辑。
+*/
 
 // ========== 处理多个文件 ==========
 async function handleFiles(files) {
@@ -421,6 +531,16 @@ async function handleFiles(files) {
         }
     }
 }
+
+/* 
+渲染预览模块：动态生成页面预览。
+- 功能：创建div元素模拟A4布局，添加图片和裁剪线。
+- 可修改项：
+  - 类名：'preview-page', 'v-page', 'h-page', 'slot', 'cut-line' - 在CSS调整尺寸、边框颜色、间距。
+  - 图片样式：style.width='100%', objectFit='cover' - 修改objectPosition为其他对齐方式。
+  - 裁剪线样式：class 'cut-line vertical/horizontal' - 在CSS改颜色（橙色）、虚线模式。
+  - 错误显示：innerHTML中的p标签 - 调整颜色、padding。
+*/
 
 // ========== 渲染预览（根据布局动态调整） ==========
 function renderPreview() {
@@ -537,6 +657,14 @@ function renderPreview() {
     }
 }
 
+/* 
+设置模式模块：切换布局模式并更新UI。
+- 功能：更新body类并渲染预览。
+- 可修改项：
+  - 类名：'mode-${mode}' - 在CSS调整不同模式的样式，如宽度、高度。
+  - id: 'theBody' - 确保与HTML匹配。
+*/
+
 // ========== 设置模式 ==========
 function setMode(mode) {
     if (AppState.currentMode === mode) return;
@@ -554,6 +682,13 @@ function setMode(mode) {
     }
 }
 
+/* 
+更新模式按钮模块：高亮当前模式按钮。
+- 功能：切换active类。
+- 可修改项：
+  - id: 'm6', 'm9', 'm12' - 在CSS调整.active类的颜色、边框。
+*/
+
 // ========== 更新模式按钮 ==========
 function updateModeButtons() {
     try {
@@ -568,6 +703,17 @@ function updateModeButtons() {
         console.error('更新模式按钮时出错:', error);
     }
 }
+
+/* 
+保存PDF模块：生成并保存PDF文件。
+- 功能：使用jsPDF添加图片和裁剪线。
+- 可修改项：
+  - PDF选项：orientation, unit, format - 可改为其他纸张。
+  - 图片绘制：addImage参数，调整质量或格式。
+  - 裁剪线：setDrawColor(170,170,170), setLineWidth(0.3), 虚线模式[3,3] - 修改颜色、粗细、虚线间距。
+  - 文件名：`手机截图合版_${timestamp}.pdf` - 可自定义前缀。
+  - 错误消息：alert文本，根据error.message自定义。
+*/
 
 // ========== 保存PDF（根据布局动态调整） ==========
 async function savePDF() {
@@ -698,6 +844,16 @@ async function savePDF() {
     }
 }
 
+/* 
+打印相关函数模块：显示打印对话框并处理打印。
+- 功能：设置模式文本，调用window.print。
+- 可修改项：
+  - 模式文本：modeText, orientationText - 可自定义描述。
+  - id: 'printModeText', 'printOrientationText', 'printDialog' - 在CSS调整字体、颜色。
+  - setTimeout延时：100ms - 可调整以优化打印时机。
+  - 类名：'mode-${AppState.currentMode}' - 在CSS改打印视图样式。
+*/
+
 // ========== 打印相关函数 ==========
 function showPrintDialog() {
     if (!AppState.photoFiles.length) {
@@ -778,6 +934,16 @@ function handlePrint() {
     }
 }
 
+/* 
+重置应用模块：清除状态并恢复初始UI。
+- 功能：重置所有变量和元素显示。
+- 可修改项：
+  - confirm消息：文本可自定义。
+  - id: 'dropZone', 'feedbackArea' 等 - 在CSS调整重置后的样式。
+  - setMode(9) - 默认重置到9模式，可改为其他。
+  - value清空：fileIn.value = '' - 确保输入重置。
+*/
+
 // ========== 重置应用 ==========
 function resetApp() {
     if (AppState.isProcessing) {
@@ -823,6 +989,16 @@ function resetApp() {
         alert('重置失败，请刷新页面重试！');
     }
 }
+
+/* 
+初始化模块：DOM加载后设置事件监听器。
+- 功能：检查兼容性，绑定文件输入、拖拽、按钮事件。
+- 可修改项：
+  - 拖拽样式：style.background, borderColor - rgba值可调整颜色、透明度。
+  - 事件监听：addEventListener，可添加更多如touch事件。
+  - 全局错误处理：error和unhandledrejection监听，可扩展日志。
+  - updateModeButtons() - 初始化按钮状态。
+*/
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', function() {
