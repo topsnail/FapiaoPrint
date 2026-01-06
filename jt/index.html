@@ -21,7 +21,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="/index.css">
 </head>
 
 <!-- 
@@ -139,6 +138,7 @@
                 <p><strong>文件列表</strong>：可显示已加载的所有文件名，支持删除单个文件</p>
             </div>
             
+            
             <div class="help-tip">
                 <strong>💡 温馨提示：</strong> 打印前请确保打印机已连接。建议先导出一页进行测试打印。
             </div>
@@ -181,9 +181,9 @@
 
         <div class="header">
             <h1>手机截图批量排版打印</h1>
-            <button class="header-btn home-btn" onclick="goToHomePage()" title="更多工具">🏠</button>
-            <button class="header-btn invoice-btn" onclick="openInvoiceTool()" title="发票打印">🧾</button>
-            <button class="header-btn help-btn" onclick="showHelp()" title="使用说明">❓</button>
+            <button class="header-btn home-btn" onclick="goToHomePage()" title="更多工具" aria-label="返回首页">🏠</button>
+            <button class="header-btn invoice-btn" onclick="openInvoiceTool()" title="发票打印" aria-label="打开发票工具">🧾</button>
+            <button class="header-btn help-btn" onclick="showHelp()" title="使用说明" aria-label="显示使用说明">❓</button>
         </div>
 
         <!-- 
@@ -207,12 +207,12 @@
             -->
 
             <div class="drop-zone-container">
-                <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileIn').click()">
-                    <div class="upload-icon">📤</div>
+                <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileIn').click()" role="button" tabindex="0" aria-label="上传图片区域，点击或拖拽文件到此区域" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('fileIn').click();}">
+                    <div class="upload-icon" aria-hidden="true">📤</div>
                     <div class="upload-text">将手机截图拖入此处</div>
                     <div class="upload-subtext">或 <span>点击加载</span> (支持多选)</div>
                     <div class="upload-limit">✨ 仅适用于手机截图，每次不超过50张 ✨</div>
-                    <input type="file" id="fileIn" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display:none;">
+                    <input type="file" id="fileIn" accept="image/jpeg,image/png,image/jpg,image/webp" multiple style="display:none;" aria-label="选择图片文件">
                 </div>
                 
                 <div id="feedbackArea" class="drop-zone">
@@ -250,15 +250,15 @@
             <div class="settings-panel">
                 <div class="setting-unit">
                     <div class="unit-header">✂️ 裁剪线</div>
-                    <button id="cutLineToggle" class="toggle-btn btn-on" onclick="toggleCutLines()">已开启</button>
+                    <button id="cutLineToggle" class="toggle-btn btn-on" onclick="toggleCutLines()" aria-label="切换裁剪线显示" aria-pressed="true">已开启</button>
                 </div>
                 
                 <div class="setting-unit unit-full">
                     <div class="unit-header">🧩 布局选择</div>
                     <div class="mode-group" style="flex-direction: column; gap: 10px;">
-                        <button id="m6" class="btn-mode" onclick="setMode(6)">1页6张(纵向)</button>
-                        <button id="m9" class="btn-mode active" onclick="setMode(9)">1页9张(纵向)</button>
-                        <button id="m12" class="btn-mode" onclick="setMode(12)">1页12张(横向)</button>
+                        <button id="m6" class="btn-mode" onclick="setMode(6)" aria-label="1页6张纵向布局" aria-pressed="false">1页6张(纵向)</button>
+                        <button id="m9" class="btn-mode active" onclick="setMode(9)" aria-label="1页9张纵向布局" aria-pressed="true">1页9张(纵向)</button>
+                        <button id="m12" class="btn-mode" onclick="setMode(12)" aria-label="1页12张横向布局" aria-pressed="false">1页12张(横向)</button>
                     </div>
                 </div>
             </div>
@@ -273,9 +273,9 @@
         -->
 
         <div class="toolbar">
-            <button id="exportBtn" class="btn-large btn-pdf" disabled onclick="savePDF()">💾 导出 PDF</button>
-            <button id="printBtn" class="btn-large btn-print" disabled onclick="showPrintDialog()">🖨️ 立即打印</button>
-            <button class="btn-large btn-reset" onclick="resetApp()">🧹 清空重置</button>
+            <button id="exportBtn" class="btn-large btn-pdf" disabled onclick="savePDF()" aria-label="导出PDF文件">💾 导出 PDF</button>
+            <button id="printBtn" class="btn-large btn-print" disabled onclick="showPrintDialog()" aria-label="立即打印">🖨️ 立即打印</button>
+            <button class="btn-large btn-reset" onclick="resetApp()" aria-label="清空重置所有内容">🧹 清空重置</button>
         </div>
         
         <!-- 
@@ -311,7 +311,5 @@
     -->
 
     <script src="script.js"></script>
-    
-    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

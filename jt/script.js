@@ -1,10 +1,64 @@
 /* 
+提示通知模块：提供友好的用户提示，替代alert。
+- 功能：显示成功、错误、警告、信息等类型的提示。
+- 可修改项：
+  - 显示时长：duration参数，默认3000ms。
+  - 样式：在CSS中调整.toast相关样式。
+*/
+
+// ========== 提示通知系统 ==========
+function showToast(message, type = 'info', duration = 3000) {
+    // 创建toast容器（如果不存在）
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // 创建toast元素
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    // 根据类型设置图标
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-message">${message}</span>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // 触发动画
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+    
+    // 自动移除
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+/* 
 导航功能模块：处理页面导航和外部工具打开。
 - 功能：返回首页和打开发票工具。
 - 可修改项：
   - 首页URL：const homeUrl = "https://888.topmer.top"; 可更改为其他首页地址。
   - 发票工具URL：const invoiceUrl = "https://888.topmer.top/fp"; 可更改为其他工具地址。
-  - 错误消息：alert中的文本，可自定义提示语。
+  - 错误消息：使用showToast替代alert。
   - 日志输出：在console.error中，可添加更多调试信息。
 */
 
@@ -15,7 +69,7 @@ function goToHomePage() {
         window.location.href = homeUrl;
     } catch (error) {
         console.error('返回首页时出错:', error);
-        alert('无法返回首页，请稍后重试！');
+        showToast('无法返回首页，请稍后重试！', 'error');
     }
 }
 
@@ -25,7 +79,7 @@ function openInvoiceTool() {
         window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
         console.error('打开发票工具时出错:', error);
-        alert('无法打开发票工具，请稍后重试！');
+        showToast('无法打开发票工具，请稍后重试！', 'error');
     }
 }
 
@@ -67,6 +121,7 @@ const AppState = {
     photoFiles: [], // 存储处理后的手机截图数据 {dataUrl, originalName, dimensions}
     originalFileNames: [], // 保存原始文件名
     originalFiles: [], // 保存原始文件对象
+    fileHashes: [], // 存储文件哈希值，用于检测重复
     currentMode: 9, // 默认9张模式
     showCutLines: true, // 裁剪线显示状态
     isProcessing: false
@@ -194,6 +249,7 @@ function toggleCutLines() {
     if (btn) {
         btn.innerText = AppState.showCutLines ? '已开启' : '已关闭';
         btn.className = `toggle-btn ${AppState.showCutLines ? 'btn-on' : 'btn-off'}`;
+        btn.setAttribute('aria-pressed', AppState.showCutLines.toString());
     }
     
     renderPreview();
@@ -287,6 +343,7 @@ function deleteFile(index) {
     AppState.photoFiles.splice(index, 1);
     AppState.originalFileNames.splice(index, 1);
     AppState.originalFiles.splice(index, 1);
+    AppState.fileHashes.splice(index, 1);
     
     // 更新文件列表显示
     updateFileList(AppState.originalFiles);
@@ -295,6 +352,11 @@ function deleteFile(index) {
     const successInfo = document.getElementById('successInfo');
     if (successInfo) {
         successInfo.innerText = `✅ 已成功加载 ${AppState.photoFiles.length} 张手机截图 ✨`;
+    }
+    
+    // 显示删除成功提示
+    if (AppState.photoFiles.length > 0) {
+        showToast(`已删除文件，剩余 ${AppState.photoFiles.length} 张`, 'info', 2000);
     }
     
     // 如果没有文件了，显示拖拽区域
@@ -358,9 +420,14 @@ function updateFileList(files) {
                 
             return `
                 <div class="file-item" data-index="${index}">
+                    <span class="file-number">${index + 1}.</span>
                     <div class="file-name" title="${file.name}">
-                        ${index + 1}. ${displayName}
+                        ${displayName}
                     </div>
+                    <button class="file-status-btn" title="已加载" disabled>
+                        <span class="status-icon">✓</span>
+                        <span class="status-text">已加载</span>
+                    </button>
                     <button class="file-delete" onclick="deleteFile(${index})" title="删除此文件">×</button>
                 </div>
             `;
@@ -377,6 +444,78 @@ function updateFileList(files) {
   - 支持格式：在processImageFile中，可添加更多错误处理。
   - resolve对象：可添加更多图片属性，如旋转信息。
 */
+
+/* 
+计算文件哈希值模块：生成文件的简单哈希值用于重复检测。
+- 功能：使用文件名+大小+部分内容生成哈希值。
+- 可修改项：
+  - 哈希算法：可改为更复杂的算法如SHA-256（需要Web Crypto API）。
+*/
+
+// ========== 计算文件哈希值 ==========
+async function calculateFileHash(file) {
+    return new Promise((resolve) => {
+        // 使用文件名 + 文件大小 + 最后修改时间生成唯一标识
+        // 这是一个快速且实用的方法
+        const hashString = `${file.name}_${file.size}_${file.lastModified}`;
+        
+        // 简单的哈希函数
+        let hash = 0;
+        for (let i = 0; i < hashString.length; i++) {
+            const char = hashString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // 转换为32位整数
+        }
+        
+        resolve(Math.abs(hash).toString(36));
+    });
+}
+
+/* 
+检测重复文件模块：检查文件是否已存在。
+- 功能：基于文件名、大小和哈希值检测重复。
+- 返回：{isDuplicate: boolean, duplicateIndex: number, reason: string}
+*/
+
+// ========== 检测重复文件 ==========
+async function checkDuplicateFile(file) {
+    // 方法1：检查文件名是否已存在（最快）
+    const nameIndex = AppState.originalFileNames.indexOf(file.name);
+    if (nameIndex !== -1) {
+        return {
+            isDuplicate: true,
+            duplicateIndex: nameIndex,
+            reason: '文件名重复'
+        };
+    }
+    
+    // 方法2：检查文件大小是否相同（快速）
+    const sizeMatches = AppState.originalFiles
+        .map((f, index) => ({ file: f, index }))
+        .filter(({ file: f }) => f.size === file.size);
+    
+    if (sizeMatches.length > 0) {
+        // 方法3：如果大小相同，计算哈希值进行深度检测
+        const newFileHash = await calculateFileHash(file);
+        
+        for (const { file: existingFile, index } of sizeMatches) {
+            const existingHash = AppState.fileHashes[index];
+            if (existingHash === newFileHash) {
+                return {
+                    isDuplicate: true,
+                    duplicateIndex: index,
+                    reason: '文件内容重复'
+                };
+            }
+        }
+    }
+    
+    return {
+        isDuplicate: false,
+        duplicateIndex: -1,
+        reason: ''
+    };
+}
 
 // ========== 处理单张图片（保留原始比例） ==========
 async function processImageFile(file) {
@@ -433,7 +572,7 @@ async function handleFiles(files) {
     }
 
     if (AppState.isProcessing) {
-        alert('正在处理文件中，请稍候...');
+        showToast('正在处理文件中，请稍候...', 'warning');
         return;
     }
 
@@ -443,7 +582,7 @@ async function handleFiles(files) {
     );
     
     if (!imageFiles.length) {
-        alert('请选择图片文件（支持JPG、PNG、WEBP格式）！');
+        showToast('请选择图片文件（支持JPG、PNG、WEBP格式）！', 'warning');
         return;
     }
 
@@ -451,7 +590,7 @@ async function handleFiles(files) {
     const totalFiles = AppState.photoFiles.length + imageFiles.length;
     if (totalFiles > CONFIG.MAX_FILES) {
         const remainingSlots = CONFIG.MAX_FILES - AppState.photoFiles.length;
-        alert(`最多支持${CONFIG.MAX_FILES}个文件，已加载${AppState.photoFiles.length}个，本次最多还能添加${remainingSlots}个`);
+        showToast(`最多支持${CONFIG.MAX_FILES}个文件，已加载${AppState.photoFiles.length}个，本次最多还能添加${remainingSlots}个`, 'warning');
         
         if (remainingSlots <= 0) {
             return;
@@ -478,16 +617,37 @@ async function handleFiles(files) {
 
     try {
         const startIndex = AppState.photoFiles.length;
+        const duplicateFiles = [];
+        const skippedFiles = [];
         
         for (let i = 0; i < imageFiles.length; i++) {
             const currentIndex = startIndex + i;
             progressText.innerText = `处理中 ${currentIndex + 1} / ${totalFiles}`;
             
             try {
+                // 检测重复文件
+                const duplicateCheck = await checkDuplicateFile(imageFiles[i]);
+                
+                if (duplicateCheck.isDuplicate) {
+                    const existingFileName = AppState.originalFileNames[duplicateCheck.duplicateIndex];
+                    duplicateFiles.push({
+                        newFile: imageFiles[i].name,
+                        existingFile: existingFileName,
+                        reason: duplicateCheck.reason
+                    });
+                    skippedFiles.push(imageFiles[i].name);
+                    continue; // 跳过重复文件
+                }
+                
+                // 计算并保存文件哈希值
+                const fileHash = await calculateFileHash(imageFiles[i]);
+                
+                // 处理图片
                 const processedImage = await processImageFile(imageFiles[i]);
                 AppState.photoFiles.push(processedImage);
                 AppState.originalFileNames.push(imageFiles[i].name);
                 AppState.originalFiles.push(imageFiles[i]);
+                AppState.fileHashes.push(fileHash);
                 
                 const progress = Math.round(((i + 1) / imageFiles.length) * 100);
                 progressBar.style.width = `${progress}%`;
@@ -496,6 +656,12 @@ async function handleFiles(files) {
                 console.error(`文件 ${imageFiles[i].name} 处理失败:`, error);
                 continue;
             }
+        }
+        
+        // 显示重复文件提示
+        if (duplicateFiles.length > 0) {
+            const duplicateNames = duplicateFiles.map(d => d.newFile).join('、');
+            showToast(`已跳过 ${duplicateFiles.length} 个重复文件：${duplicateNames}`, 'warning', 5000);
         }
         
         const dropZone = document.getElementById('dropZone');
@@ -521,9 +687,12 @@ async function handleFiles(files) {
         
         renderPreview();
         
+        // 显示成功提示
+        showToast(`成功加载 ${AppState.photoFiles.length} 张图片！`, 'success');
+        
     } catch (error) {
         console.error('文件处理失败:', error);
-        alert('文件处理失败，请重试！\n错误信息: ' + error.message);
+        showToast(`文件处理失败：${error.message}`, 'error', 5000);
     } finally {
         AppState.isProcessing = false;
         if (progressWrapper) {
@@ -696,9 +865,18 @@ function updateModeButtons() {
         const m9 = document.getElementById('m9');
         const m12 = document.getElementById('m12');
         
-        if (m6) m6.classList.toggle('active', AppState.currentMode === 6);
-        if (m9) m9.classList.toggle('active', AppState.currentMode === 9);
-        if (m12) m12.classList.toggle('active', AppState.currentMode === 12);
+        if (m6) {
+            m6.classList.toggle('active', AppState.currentMode === 6);
+            m6.setAttribute('aria-pressed', (AppState.currentMode === 6).toString());
+        }
+        if (m9) {
+            m9.classList.toggle('active', AppState.currentMode === 9);
+            m9.setAttribute('aria-pressed', (AppState.currentMode === 9).toString());
+        }
+        if (m12) {
+            m12.classList.toggle('active', AppState.currentMode === 12);
+            m12.setAttribute('aria-pressed', (AppState.currentMode === 12).toString());
+        }
     } catch (error) {
         console.error('更新模式按钮时出错:', error);
     }
@@ -719,11 +897,13 @@ function updateModeButtons() {
 async function savePDF() {
     if (!AppState.photoFiles.length) {
         console.warn('savePDF: 没有可导出的文件');
-        alert('请先加载手机截图文件！');
+        showToast('请先加载手机截图文件！', 'warning');
         return;
     }
     
     try {
+        showToast('开始生成PDF，请稍候...', 'info');
+        
         const layout = calculateLayout(AppState.currentMode);
         
         const doc = new jsPDF({
@@ -737,6 +917,8 @@ async function savePDF() {
         }
         
         const totalPages = Math.ceil(AppState.photoFiles.length / layout.photosPerPage);
+        const totalImages = AppState.photoFiles.length;
+        let processedImages = 0;
         
         for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
             if (pageIndex > 0) {
@@ -749,6 +931,15 @@ async function savePDF() {
                     const fileIndex = pageIndex * layout.photosPerPage + slotIndex;
                     
                     if (fileIndex >= AppState.photoFiles.length) break;
+                    
+                    processedImages++;
+                    // 每处理5张图片或每页更新一次进度
+                    if (processedImages % 5 === 0 || slotIndex === 0) {
+                        const progress = Math.round((processedImages / totalImages) * 100);
+                        showToast(`正在生成PDF... ${progress}% (${processedImages}/${totalImages})`, 'info', 1000);
+                        // 让浏览器有机会更新UI
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
                     
                     const x = layout.margin + (col * (layout.slotWidth + layout.spacing));
                     const y = layout.margin + (row * (layout.slotHeight + layout.spacing));
@@ -830,6 +1021,8 @@ async function savePDF() {
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
         doc.save(`手机截图合版_${timestamp}.pdf`);
         
+        showToast('PDF导出成功！', 'success');
+        
     } catch (error) {
         console.error('导出PDF失败:', error);
         
@@ -840,7 +1033,7 @@ async function savePDF() {
             errorMsg += '：文件过大导致内存不足，请减少文件数量';
         }
         
-        alert(errorMsg + '，请重试！');
+        showToast(errorMsg + '，请重试！', 'error', 5000);
     }
 }
 
@@ -858,7 +1051,7 @@ async function savePDF() {
 function showPrintDialog() {
     if (!AppState.photoFiles.length) {
         console.warn('showPrintDialog: 没有可打印的文件');
-        alert('请先加载手机截图文件！');
+        showToast('请先加载手机截图文件！', 'warning');
         return;
     }
     
@@ -930,7 +1123,7 @@ function handlePrint() {
         }, 100);
     } catch (error) {
         console.error('执行打印时出错:', error);
-        alert('打印失败，请检查打印机设置！');
+        showToast('打印失败，请检查打印机设置！', 'error');
     }
 }
 
@@ -956,6 +1149,7 @@ function resetApp() {
         AppState.photoFiles = [];
         AppState.originalFileNames = [];
         AppState.originalFiles = [];
+        AppState.fileHashes = [];
         AppState.showCutLines = true;
         AppState.isProcessing = false;
         
@@ -984,9 +1178,11 @@ function resetApp() {
         
         hidePrintDialog();
         
+        showToast('已重置应用', 'success', 2000);
+        
     } catch (error) {
         console.error('重置应用时出错:', error);
-        alert('重置失败，请刷新页面重试！');
+        showToast('重置失败，请刷新页面重试！', 'error');
     }
 }
 
@@ -1076,6 +1272,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     document.addEventListener('keydown', function(e) {
+        // ESC键：关闭所有弹窗
         if (e.key === 'Escape') {
             hidePrintDialog();
             closeHelp();
