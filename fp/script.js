@@ -22,6 +22,43 @@ const { jsPDF } = window.jspdf;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/build/pdf.worker.mjs';
 
+// Toast 通知系统
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const icons = {
+        success: '✅',
+        warning: '⚠️',
+        error: '❌',
+        info: 'ℹ️'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${icons[type] || icons.info}</span>
+        <span class="toast-content">${message}</span>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // 自动移除
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, duration);
+    }
+    
+    return toast;
+}
+
 function checkBrowserCompatibility() {
     const missingAPIs = [];
     if (!window.File) missingAPIs.push('File API');
@@ -72,9 +109,8 @@ function updateFileList() {
                 
             return `
                 <div class="file-item" title="文件名: ${file.name}">
-                    <div class="file-name" title="${file.name}">
-                        ${index + 1}. ${displayName}
-                    </div>
+                    <div class="file-index">${index + 1}.</div>
+                    <div class="file-name" title="${file.name}">${displayName}</div>
                     <div class="file-status">✓ 已加载</div>
                     <button class="file-remove-btn" data-index="${index}" title="移除此文件">×</button>
                 </div>
@@ -105,40 +141,60 @@ function removeFile(indexToRemove) {
 
     } catch (error) {
         console.error(`移除文件 #${indexToRemove} 时出错:`, error);
-        alert('移除文件时出错，请重试。');
+        showToast('移除文件时出错，请重试。', 'error');
     }
 }
 
 async function handleFiles(files) {
     if (!files || files.length === 0) return;
     if (AppState.isProcessing) {
-        alert('正在处理文件中，请稍候...');
+        showToast('正在处理文件中，请稍候...', 'warning');
         return;
     }
 
     let pdfFiles = Array.from(files).filter(f => f.type === 'application/pdf');
     if (!pdfFiles.length) {
-        alert('请选择PDF文件！');
+        showToast('请选择PDF文件！', 'warning');
         return;
     }
 
-    const newFilesToProcess = pdfFiles.filter(newFile => 
-        !AppState.originalFiles.some(existingFile => 
+    // 检测重复文件并自动跳过
+    const duplicateFiles = [];
+    const newFilesToProcess = pdfFiles.filter(newFile => {
+        const isDuplicate = AppState.originalFiles.some(existingFile => 
             existingFile.name === newFile.name && 
             existingFile.size === newFile.size && 
             existingFile.lastModified === newFile.lastModified
-        )
-    );
+        );
+        if (isDuplicate) {
+            duplicateFiles.push(newFile.name);
+        }
+        return !isDuplicate;
+    });
+
+    // 如果有重复文件，显示提示
+    if (duplicateFiles.length > 0) {
+        const duplicateCount = duplicateFiles.length;
+        const message = duplicateCount === 1 
+            ? `已跳过重复文件：${duplicateFiles[0]}`
+            : `已跳过 ${duplicateCount} 个重复文件`;
+        showToast(message, 'info', 4000);
+    }
 
     if (newFilesToProcess.length === 0) {
-        alert('所有选择的文件都已在列表中。');
+        if (duplicateFiles.length === 0) {
+            showToast('请选择PDF文件！', 'warning');
+        }
         return;
     }
 
     const totalAfterAdding = AppState.originalFiles.length + newFilesToProcess.length;
     if (totalAfterAdding > CONFIG.MAX_FILES) {
-        alert(`最多支持${CONFIG.MAX_FILES}个文件，当前已有${AppState.originalFiles.length}个，只能添加${CONFIG.MAX_FILES - AppState.originalFiles.length}个新文件`);
-        return;
+        const canAdd = CONFIG.MAX_FILES - AppState.originalFiles.length;
+        showToast(`最多支持${CONFIG.MAX_FILES}个文件，当前已有${AppState.originalFiles.length}个，只能添加${canAdd}个新文件`, 'warning', 5000);
+        // 只处理能添加的文件数量
+        newFilesToProcess.splice(canAdd);
+        if (newFilesToProcess.length === 0) return;
     }
 
     AppState.isProcessing = true;
@@ -153,6 +209,10 @@ async function handleFiles(files) {
     progressBar.style.width = '0%';
     progressText.innerText = `准备中...`;
 
+    let successCount = 0;
+    let failCount = 0;
+    const failedFiles = [];
+    
     try {
         for (let i = 0; i < newFilesToProcess.length; i++) {
             const file = newFilesToProcess[i];
@@ -185,28 +245,52 @@ async function handleFiles(files) {
                 
                 AppState.originalFiles.push(file);
                 AppState.invoiceFiles.push(imageData);
+                successCount++;
                 
                 const progress = Math.round((currentIndex / totalNew) * 100);
                 progressBar.style.width = `${progress}%`;
                 
+                // 主动清理 Canvas 内存
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                context.clearRect(0, 0, canvasWidth, canvasHeight);
                 canvas.width = 0;
                 canvas.height = 0;
+                // Canvas 会在作用域结束后自动被垃圾回收
                 
             } catch (error) {
-                console.error(`文件 ${i+1} 处理失败:`, error);
-                continue;
+                console.error(`文件 ${file.name} 处理失败:`, error);
+                failCount++;
+                failedFiles.push(file.name);
             }
         }
         
-        document.getElementById('successInfo').innerText = `✅ 已成功加载 ${AppState.invoiceFiles.length} 张发票 ✨`;
-        updateFileList();
-        document.getElementById('exportBtn').disabled = false;
-        document.getElementById('printBtn').disabled = false;
-        renderPreview();
+        // 显示处理结果
+        if (successCount > 0) {
+            document.getElementById('successInfo').innerText = `✅ 已成功加载 ${AppState.invoiceFiles.length} 张发票 ✨`;
+            updateFileList();
+            document.getElementById('exportBtn').disabled = false;
+            document.getElementById('printBtn').disabled = false;
+            renderPreview();
+            
+            showToast(`成功加载 ${successCount} 个文件`, 'success');
+        }
+        
+        if (failCount > 0) {
+            const failMessage = failCount === 1 
+                ? `文件处理失败：${failedFiles[0]}`
+                : `${failCount} 个文件处理失败`;
+            showToast(failMessage, 'error', 5000);
+        }
+        
+        // 如果所有文件都失败，显示提示
+        if (successCount === 0 && failCount > 0) {
+            showToast('所有文件处理失败，请检查文件格式', 'error', 5000);
+        }
         
     } catch (error) {
         console.error('文件处理失败:', error);
-        alert('文件处理失败，请重试！');
+        showToast('文件处理失败，请重试！', 'error');
         resetApp();
     } finally {
         AppState.isProcessing = false;
@@ -355,7 +439,7 @@ async function savePDF() {
         let errorMsg = '导出PDF失败';
         if (error.message?.includes('security')) errorMsg += '：可能是浏览器安全策略限制，请尝试在其他浏览器中操作';
         else if (error.message?.includes('memory')) errorMsg += '：文件过大导致内存不足，请减少文件数量';
-        alert(errorMsg + '，请重试！');
+        showToast(errorMsg + '，请重试！', 'error', 6000);
     }
 }
 
@@ -374,7 +458,31 @@ function hidePrintDialog() {
 
 function handlePrint() {
     if (!AppState.invoiceFiles.length) return;
-    setTimeout(() => { window.print(); setTimeout(() => { window.scrollTo(0, 0); }, 100); }, 100);
+    
+    // 根据布局模式设置打印方向
+    const printOrientation = AppState.currentMode === 2 ? 'portrait' : 'landscape';
+    
+    // 动态创建或更新打印样式
+    let printStyle = document.getElementById('dynamic-print-style');
+    if (!printStyle) {
+        printStyle = document.createElement('style');
+        printStyle.id = 'dynamic-print-style';
+        printStyle.setAttribute('media', 'print');
+        document.head.appendChild(printStyle);
+    }
+    
+    // 设置 @page 规则
+    printStyle.textContent = `
+        @page {
+            margin: 0;
+            size: A4 ${printOrientation};
+        }
+    `;
+    
+    setTimeout(() => { 
+        window.print(); 
+        setTimeout(() => { window.scrollTo(0, 0); }, 100); 
+    }, 100);
 }
 
 function resetApp() {

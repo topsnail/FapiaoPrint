@@ -128,7 +128,7 @@ body {
 .file-list-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.1); }
 
 .btn-add-more {
-    background-color: #28a745;
+    background-color: #e67e22;
     color: white;
     border: none;
     border-radius: 6px;
@@ -141,17 +141,18 @@ body {
 }
 
 .btn-add-more:hover {
-    background-color: #218838;
+    background-color: #d4731a;
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .file-list-scroll { max-height: 180px; overflow-y: scroll; overflow-x: hidden; border: 1px solid rgba(74, 109, 124, 0.2); border-radius: 6px; background: rgba(255, 255, 255, 0.3); padding: 4px; }
 .file-list { font-size: 12px; }
 .file-item { position: relative; display: flex; align-items: center; justify-content: space-between; padding: 2px 30px 2px 4px; margin: 1px 0; background: rgba(255, 255, 255, 0.5); border-radius: 4px; min-height: 20px; }
-.file-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; font-size: 10px; max-width: 180px; }
+.file-index { font-size: 10px; color: #4a6d7c; font-weight: 600; padding-right: 8px; min-width: 28px; text-align: left; }
+.file-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px; font-size: 10px; max-width: 180px; text-align: center; }
 .file-status { font-size: 9px; padding: 1px 4px; border-radius: 8px; background: #6b9c70; color: white; white-space: nowrap; }
-.file-remove-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; background: rgba(74, 109, 124, 0.2); border: none; border-radius: 50%; color: #4a6d7c; font-size: 14px; line-height: 18px; text-align: center; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
-.file-remove-btn:hover { background: #e67e22; color: white; transform: translateY(-50%); }
+.file-remove-btn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; background: rgba(74, 109, 124, 0.2); border: none; border-radius: 50%; color: #4a6d7c; font-size: 14px; line-height: 18px; text-align: center; cursor: pointer; }
+.file-remove-btn:hover { background: #e67e22; color: white; }
 
 .progress-wrapper { position: relative; height: 24px; background: rgba(0, 0, 0, 0.1); border-radius: 12px; overflow: hidden; display: none; }
 .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #77b282, #429852, #0c7820); transition: width 0.8s ease; }
@@ -228,6 +229,107 @@ input[type="range"] { width: 100%; cursor: pointer; accent-color: #0066b2; }
 .footer a { color: #147a61; text-decoration: none; font-weight: 600; transition: color 0.2s ease; }
 .footer a:hover { color: #0d5d49; text-decoration: underline; }
 
+/* Toast 通知样式 */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: white;
+    border-radius: 8px;
+    padding: 14px 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: toastSlideIn 0.3s ease-out;
+    pointer-events: auto;
+    border-left: 4px solid #4a6d7c;
+}
+
+.toast.toast-success {
+    border-left-color: #6b9c70;
+}
+
+.toast.toast-warning {
+    border-left-color: #e67e22;
+}
+
+.toast.toast-error {
+    border-left-color: #e74c3c;
+}
+
+.toast.toast-info {
+    border-left-color: #3498db;
+}
+
+.toast-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+    font-size: 14px;
+    color: #2c3e50;
+    line-height: 1.4;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.toast-close:hover {
+    color: #64748b;
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast.fade-out {
+    animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+@keyframes toastSlideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
 @media (max-width: 768px) {
     .file-name { max-width: 120px; font-size: 9px; }
     .file-status { font-size: 8px; padding: 1px 4px; }
@@ -236,6 +338,8 @@ input[type="range"] { width: 100%; cursor: pointer; accent-color: #0066b2; }
     .help-btn, .home-btn, .invoice-btn { width: 32px; height: 32px; font-size: 16px; }
     .home-btn { right: 76px; }
     .invoice-btn { right: 38px; }
+    .toast-container { top: 10px; right: 10px; left: 10px; }
+    .toast { min-width: auto; max-width: 100%; }
 }
 
 @media print {
@@ -297,9 +401,9 @@ input[type="range"] { width: 100%; cursor: pointer; accent-color: #0066b2; }
     page-break-after: always !important;
 }
 
-    /* 8. @page 规则: 通用设置，移除命名页面以解决首页空白问题 */
+    /* 8. @page 规则: 通用设置（方向由 JavaScript 动态设置） */
     @page {
         margin: 0;
-        size: auto;
+        size: A4 landscape;
     }
 }
