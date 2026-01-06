@@ -3,331 +3,219 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="发票打印和手机截图打印工具，简洁高效的排版助手">
-    <meta name="keywords" content="打印工具,发票打印,截图打印,排版工具">
-    <title>打印工具</title>
-    <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text x=%2250%22 y=%22.9em%22 font-size=%2285%22 text-anchor=%22middle%22&gt;%F0%9F%96%A8%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
+    <title>打印工具 - 渐变呼吸背景</title>
     <style>
         :root {
-            --bg-speed: 15s;
-            --primary-color: #147a61;
-            --text-dark: #2c3e50;
-            --text-gray: #576574;
-            --text-white: #ffffff;
-            --card-bg-default: rgba(235, 230, 230, 0.75);
-            --card-bg-hover: rgba(245, 240, 240, 0.85);
-            --card-bg-pressed: rgba(230, 225, 225, 0.8);
-            --border-radius: 16px;
-            --card-shadow-default: 0 12px 30px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.1) inset;
-            --card-shadow-hover: 0 20px 40px rgba(0,0,0,0.2);
-            --card-shadow-pressed: 0 16px 32px rgba(0,0,0,0.18);
-            --card-shadow-focus: 0 0 0 3px rgba(20, 122, 97, 0.4);
-            --spacing-large: 50px;
-            --spacing-large-sm: 30px;
-            --spacing-medium: 20px;
+            --animation-bg-speed: 20s;
+            --gradient-angle: 45deg;
+            
+            --color-primary: #4a6d7c;
+            --color-primary-rgb: 74, 109, 124;
+            --color-secondary: #147a61;
+            --color-success: #6b9c70;
+            --color-warning: #e67e22;
+            --color-danger: #d35400;
+            --color-light-gray: #cbd5e1;
+            --color-medium-gray: #64748b;
+            --color-dark-gray: #2c3e50;
+            --color-white: #ffffff;
+            --color-black: #000000;
+            --color-gradient-start: #4a6d7c;
+            --color-gradient-mid1: #8da383;
+            --color-gradient-mid2: #8a6a9c;
+            --color-gradient-mid3: #d18a66;
+            --color-gradient-end: #147a61;
+            
+            --opacity-light: 0.3;
+            --opacity-medium: 0.5;
+            --opacity-heavy: 0.7;
+            
+            --border-radius-small: 4px;
+            --border-radius-medium: 8px;
+            --border-radius-large: 12px;
+            --spacing-xs: 2px;
+            --spacing-sm: 4px;
+            --spacing-md: 8px;
+            --spacing-lg: 12px;
+            --spacing-xl: 20px;
+            --spacing-xxl: 25px;
+            
+            --shadow-light: 0 4px 12px rgba(0,0,0,0.2);
+            --shadow-medium: 0 10px 30px rgba(0,0,0,0.3);
+            --shadow-heavy: 0 25px 50px rgba(0,0,0,0.2);
+            
+            --font-size-xs: 9px;
+            --font-size-sm: 12px;
+            --font-size-md: 14px;
+            --font-size-lg: 18px;
+            --font-size-xl: 20px;
+            --font-size-xxl: 24px;
+            
+            --transition-fast: 0.1s ease;
+            --transition-medium: 0.2s ease;
+            --transition-slow: 0.8s ease;
         }
 
-        .flex-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        .card-effect {
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow-default);
-            transition: all 0.3s ease;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #5c8c69;
-            background: linear-gradient(-45deg, #a0c783, #7db892, #63ba98, #8db5a0, #ae9285, #c4a890, rgba(239, 186, 162, 0.8), #d4b896, #C9B380);
-            background-size: 400% 400%;
-            animation: gradientBG var(--bg-speed) ease-in-out infinite;
-            background-attachment: fixed;
             min-height: 100vh;
-            padding: 12px 20px 20px;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            will-change: background-position;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
+            font-family: sans-serif;
+            overflow: hidden;
+            position: relative;
+            background: transparent; /* 让下方的渐变层可见 */
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            body {
-                animation: none;
+        .bg-animate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(
+                var(--gradient-angle),
+                var(--color-gradient-start),
+                var(--color-gradient-mid1),
+                var(--color-gradient-mid2),
+                var(--color-gradient-mid3),
+                var(--color-gradient-end)
+            );
+            background-size: 500% 500%;
+            animation: breath var(--animation-bg-speed) ease infinite;
+        }
+
+        @keyframes breath {
+            0%, 100% {
+                background-position: 0% 50%;
+                filter: brightness(1);
             }
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; opacity: 0.98; }
-            50% { background-position: 100% 50%; opacity: 1; }
-            100% { background-position: 0% 50%; opacity: 0.98; }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+            25% {
+                background-position: 50% 100%;
+                filter: brightness(1.1);
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            50% {
+                background-position: 100% 50%;
+                filter: brightness(1);
+            }
+            75% {
+                background-position: 50% 0%;
+                filter: brightness(1.1);
             }
         }
 
         .header {
             text-align: center;
-            margin-bottom: var(--spacing-large);
-            width: 100%;
+            margin-bottom: var(--spacing-xxl);
+            padding: 0 var(--spacing-xl);
+            position: relative;
+            z-index: 1;
         }
 
         .header h3 {
-            font-size: 18px;
-            color: var(--text-white);
-            margin-top: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3), 0 0 20px rgba(0,0,0,0.1);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
+            font-size: var(--font-size-lg);
+            color: var(--color-white);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .tools-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 40px;
-            max-width: 1200px;
-            padding: var(--spacing-medium);
+            gap: var(--spacing-xl);
+            width: 100%;
+            max-width: 800px;
+            padding: var(--spacing-xl);
             justify-items: center;
-        }
-
-        .tool-card {
-            width: 280px;
-            height: 280px;
-            background: linear-gradient(rgba(235, 230, 230, 0.9), rgba(235, 230, 230, 0.8));
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-radius: var(--border-radius);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 30px;
-            box-shadow: var(--card-shadow-default);
-            transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            cursor: pointer;
             position: relative;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            text-rendering: optimizeLegibility;
-            outline: none;
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .tool-card {
-                animation: none;
-            }
-        }
-
-        .tool-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--card-shadow-hover);
-            background: linear-gradient(rgba(245, 240, 240, 0.95), rgba(245, 240, 240, 0.85));
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-        }
-
-        .tool-card:focus-visible {
-            outline: none;
-            box-shadow: var(--card-shadow-focus), var(--card-shadow-hover);
-            transform: translateY(-4px);
-        }
-
-        .tool-card.pressed {
-            transform: translateY(-4px) scale(0.98);
-            background: var(--card-bg-pressed);
-            box-shadow: var(--card-shadow-pressed);
-            transition: transform 0.1s ease, background 0.1s ease, box-shadow 0.1s ease;
-        }
-
-        .tool-card::after {
-            content: "→";
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            color: var(--text-gray);
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-        .tool-card:hover::after,
-        .tool-card:focus-visible::after {
-            opacity: 1;
-            color: var(--primary-color);
-        }
-
-        .tool-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(74, 109, 124, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            margin-bottom: 25px;
-            transition: all 0.2s ease;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-        }
-
-        .tool-card:nth-child(1) {
-            animation-delay: 0.1s;
-        }
-
-        .tool-card:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .tool-card:nth-child(1),
-            .tool-card:nth-child(2) {
-                animation-delay: 0s;
-            }
-        }
-
-        .tool-card:hover .tool-icon,
-        .tool-card:focus-visible .tool-icon {
-            background: rgba(255, 255, 255, 0.5);
-            transform: scale(1.05);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.2), 0 0 15px rgba(20, 122, 97, 0.2);
-            border-color: var(--primary-color);
-        }
-
-        .tool-title {
-            color: var(--text-dark);
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-            transition: color 0.2s ease;
-        }
-
-        .tool-card:hover .tool-title,
-        .tool-card:focus-visible .tool-title {
-            color: var(--primary-color);
-            text-shadow: 0 0 10px rgba(20, 122, 97, 0.3);
-        }
-
-        .tool-desc {
-            color: var(--text-gray);
-            font-size: 15px;
-            line-height: 1.5;
-            max-width: 220px;
+            z-index: 1;
         }
 
         .tool-link {
             text-decoration: none;
             color: inherit;
-            display: block;
-            outline: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
-        .tool-link:focus-visible {
-            outline: none;
+        .tool-card {
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1/1;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            border-radius: var(--border-radius-large);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-light);
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all var(--transition-slow);
         }
 
-        @media (max-width: 768px) {
-            .tools-container { gap: 30px; padding: 15px; }
-            .tool-card { width: 260px; height: 260px; padding: 25px; }
-            .tool-title { font-size: 22px; }
-            .tool-desc { font-size: 14px; max-width: 200px; }
+        .tool-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255,255,255,0.85);
+            box-shadow: var(--shadow-medium);
         }
 
-        @media (max-width: 600px) {
-            .tools-container { grid-template-columns: 1fr; }
+        .tool-icon {
+            font-size: 3.5rem;
+            margin-bottom: var(--spacing-xl);
         }
 
-        @media (max-width: 480px) {
-            body { padding: 10px; }
-            .header { margin-bottom: var(--spacing-large-sm); }
-            .header h3 { font-size: 16px; padding: 0 20px; }
-            .tool-card { width: 260px; height: 260px; padding: 20px; }
-            .tool-icon { width: 70px; height: 70px; font-size: 32px; margin-bottom: 20px; }
-            .tool-title { font-size: 20px; }
-            .tool-desc { font-size: 13px; max-width: 180px; }
+        .tool-title {
+            color: var(--color-dark-gray);
+            font-size: var(--font-size-xxl);
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
         }
 
-        @media (orientation: landscape) and (max-height: 500px) {
-            .header { margin-bottom: 20px; }
-            .header h3 { font-size: 14px; margin-top: 5px; }
-            .tools-container { gap: 20px; padding: 10px; }
+        .tool-desc {
+            color: var(--color-medium-gray);
+            font-size: var(--font-size-sm);
+            line-height: 1.6;
+            padding: 0 var(--spacing-md);
         }
     </style>
 </head>
 <body>
+    <div class="bg-animate"></div>
+
     <div class="header">
-        <h3>✨仅仅只为了粘贴发票和凭证方便，其它可能并不适用</h3>
+        <h3>✨ 仅仅只为了粘贴发票和凭证方便，其它可能并不适用</h3>
     </div>
 
     <div class="tools-container">
-        <a href="https://888.topmer.top/fp/index.html" class="tool-link" aria-label="发票打印工具">
-            <div class="tool-card card-effect">
-                <div class="tool-icon flex-center" aria-hidden="true">
-                    🧾
-                </div>
+        <a href="https://888.topmer.top/fp/index.html" class="tool-link">
+            <div class="tool-card">
+                <div class="tool-icon">🧾</div>
                 <div class="tool-title">发票打印</div>
-                <div class="tool-desc">简洁高效的发票排版打印工具，支持快速生成和打印</div>
+                <div class="tool-desc">简洁高效的发票排版工具<br>支持快速生成标准页面</div>
             </div>
         </a>
-        <a href="https://888.topmer.top/jt/index.html" class="tool-link" aria-label="手机截图打印工具">
-            <div class="tool-card card-effect">
-                <div class="tool-icon flex-center" aria-hidden="true">
-                    🖼️
-                </div>
-                <div class="tool-title">手机截图打印</div>
-                <div class="tool-desc">批量智能排版助手，支持两种布局和裁剪线</div>
+        <a href="https://888.topmer.top/jt/index.html" class="tool-link">
+            <div class="tool-card">
+                <div class="tool-icon">🖼️</div>
+                <div class="tool-title">截图打印</div>
+                <div class="tool-desc">批量智能排版助手<br>支持裁剪线与多种布局方案</div>
             </div>
         </a>
     </div>
 
-    <script>
-        document.querySelectorAll('.tool-card').forEach(card => {
-            // 鼠标事件
-            card.addEventListener('mousedown', () => {
-                card.classList.add('pressed');
-            });
-            card.addEventListener('mouseup', () => {
-                card.classList.remove('pressed');
-            });
-            card.addEventListener('mouseleave', () => {
-                card.classList.remove('pressed');
-            });
-            
-            // 键盘事件支持
-            card.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    card.classList.add('pressed');
-                    card.closest('.tool-link')?.click();
-                }
-            });
-            card.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    card.classList.remove('pressed');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
