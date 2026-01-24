@@ -133,10 +133,10 @@
 
         .tools-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* 加宽卡片最小宽度 */
-            gap: var(--spacing-xxl);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 减小卡片最小宽度 */
+            gap: var(--spacing-lg);
             width: 100%;
-            max-width: 800px;
+            max-width: 600px;
             padding: 0 var(--spacing-xl);
             justify-items: center;
             position: relative;
@@ -154,8 +154,8 @@
         /* 核心调整：卡片尺寸改为扁矩形，比例更协调 */
         .tool-card {
             width: 100%;
-            max-width: 240px; /* 加宽卡片 */
-            height: 280px; /* 调整高度，放弃1:1 */
+            max-width: 200px; /* 减小卡片宽度 */
+            height: 220px; /* 减小卡片高度 */
             background: rgba(255,255,255,0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px); /* 兼容Safari */
@@ -165,7 +165,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: var(--spacing-xl);
+            padding: var(--spacing-lg); /* 减小内边距 */
             box-shadow: var(--shadow-light);
             border: 1px solid rgba(255,255,255,0.3);
             cursor: pointer;
@@ -180,10 +180,10 @@
 
         /* 核心调整：图标尺寸缩小，边框变薄，比例更匹配 */
         .tool-icon {
-            font-size: 2.8rem; /* 缩小图标字号 */
-            margin-bottom: var(--spacing-xl);
-            width: 80px; /* 缩小图标容器 */
-            height: 80px;
+            font-size: 2rem; /* 进一步缩小图标字号 */
+            margin-bottom: var(--spacing-lg);
+            width: 60px; /* 进一步缩小图标容器 */
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -203,31 +203,31 @@
 
         .tool-title {
             color: var(--color-dark-gray);
-            font-size: var(--font-size-xxl);
+            font-size: var(--font-size-lg); /* 减小标题字号 */
             font-weight: 600;
-            margin-bottom: var(--spacing-md); /* 减少标题下方间距 */
+            margin-bottom: var(--spacing-sm); /* 减少标题下方间距 */
         }
 
         .tool-desc {
             color: var(--color-medium-gray);
-            font-size: var(--font-size-sm);
-            line-height: 1.6;
-            padding: 0 var(--spacing-md);
+            font-size: var(--font-size-xs); /* 减小描述文字字号 */
+            line-height: 1.5;
+            padding: 0 var(--spacing-xs);
         }
 
         /* 小屏适配 */
         @media (max-width: 480px) {
             .tools-container {
-                gap: var(--spacing-xl);
+                gap: var(--spacing-lg);
             }
             .tool-card {
-                max-width: 220px;
-                height: 260px;
+                max-width: 180px;
+                height: 200px;
             }
             .tool-icon {
-                width: 70px;
-                height: 70px;
-                font-size: 2.5rem;
+                width: 55px;
+                height: 55px;
+                font-size: 1.8rem;
             }
         }
     </style>
@@ -236,7 +236,7 @@
     <div class="bg-animate"></div>
 
     <div class="header">
-        <h3>✨ 仅仅只为了粘贴发票和凭证方便，其它可能并不适用</h3>
+        <h3>✨ 仅仅为了个人使用方便，其它可能并不适用</h3>
     </div>
 
     <div class="tools-container">
@@ -250,10 +250,17 @@
         <a href="./jt/index.html" class="tool-link">
             <div class="tool-card">
                 <div class="tool-icon">🖼️</div>
-                <div class="tool-title">截图打印</div>
+                <div class="tool-title">手机截图打印</div>
                 <div class="tool-desc">批量智能排版助手<br>支持裁剪线与多种布局方案</div>
             </div>
         </a>
+        <a href="https://fwd.topmer.top/" class="tool-link">
+            <div class="tool-card">
+                <div class="tool-icon">📊</div>
+                <div class="tool-title">FWD数据处理</div>
+                <div class="tool-desc">.mdb文件快速处理<br>支持一键导出报告数据</div>
+            </div>
+        </a>		
     </div>
 
 </body>
